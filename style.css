@@ -104,15 +104,19 @@ h1 {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
 .file-input-button:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    background: linear-gradient(to right, #2980b9, #1a252f);
 }
 
 .file-input-button:active {
     transform: translateY(1px);
+    box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
 }
 
 .file-input {
@@ -170,6 +174,7 @@ h1 {
     font-weight: 500;
 }
 
+/* Кнопка предпросмотра */
 .preview-button {
     display: inline-block;
     background: linear-gradient(to right, #2ecc71, #27ae60);
@@ -183,11 +188,27 @@ h1 {
     transition: all 0.3s ease;
     margin-top: 10px;
     box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
 .preview-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+    background: linear-gradient(to right, #27ae60, #219653);
+}
+
+.preview-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.preview-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3) !important;
+    background: linear-gradient(to right, #2ecc71, #27ae60) !important;
 }
 
 /* Информация о DataFrame */
@@ -295,31 +316,67 @@ h1 {
     cursor: pointer;
     transition: all 0.2s;
     font-size: 0.95rem;
+    position: relative;
+    overflow: hidden;
 }
 
 .action-button.save {
-    background-color: #2ecc71;
+    background: linear-gradient(to right, #2ecc71, #27ae60);
     color: white;
+    box-shadow: 0 3px 8px rgba(46, 204, 113, 0.3);
+}
+
+.action-button.save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(46, 204, 113, 0.4);
+    background: linear-gradient(to right, #27ae60, #219653);
 }
 
 .action-button.add {
-    background-color: #3498db;
+    background: linear-gradient(to right, #3498db, #2980b9);
     color: white;
+    box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3);
+}
+
+.action-button.add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(52, 152, 219, 0.4);
+    background: linear-gradient(to right, #2980b9, #2573a7);
 }
 
 .action-button.delete {
-    background-color: #e74c3c;
+    background: linear-gradient(to right, #e74c3c, #c0392b);
     color: white;
+    box-shadow: 0 3px 8px rgba(231, 76, 60, 0.3);
+}
+
+.action-button.delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(231, 76, 60, 0.4);
+    background: linear-gradient(to right, #c0392b, #a93226);
 }
 
 .action-button.export {
-    background-color: #9b59b6;
+    background: linear-gradient(to right, #9b59b6, #8e44ad);
     color: white;
+    box-shadow: 0 3px 8px rgba(155, 89, 182, 0.3);
 }
 
-.action-button:hover {
+.action-button.export:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 12px rgba(155, 89, 182, 0.4);
+    background: linear-gradient(to right, #8e44ad, #7d3c98);
+}
+
+.action-button:active {
+    transform: translateY(0);
+}
+
+.action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Стили таблицы */
@@ -349,7 +406,8 @@ td {
 }
 
 tr:hover {
-    background-color: #f9f9f9;
+    background-color: #f5f9ff;
+    transition: background-color 0.2s;
 }
 
 tr.selected {
@@ -362,13 +420,19 @@ tr.selected {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 0.95rem;
-    transition: border 0.2s;
+    transition: all 0.2s ease-in-out;
+}
+
+.editable-cell:hover {
+    border-color: #3498db;
+    background-color: #f8fbff;
 }
 
 .editable-cell:focus {
     border-color: #3498db;
     outline: none;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    background-color: white;
 }
 
 .checkbox-cell {
@@ -379,6 +443,11 @@ tr.selected {
 .checkbox-cell input {
     transform: scale(1.2);
     cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.checkbox-cell input:hover {
+    transform: scale(1.3);
 }
 
 /* Модальное окно */
@@ -405,12 +474,14 @@ tr.selected {
     display: flex;
     flex-direction: column;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-    animation: modalFadeIn 0.3s ease;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s ease-out;
 }
 
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+.modal.visible {
+    transform: translateY(0);
+    opacity: 1;
 }
 
 .modal-header {
@@ -478,6 +549,7 @@ tr.selected {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    margin: 20px 0;
 }
 
 .mapping-row {
@@ -504,12 +576,24 @@ tr.selected {
 .column-select {
     flex-grow: 1;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 2px solid #ddd;
     border-radius: 6px;
     font-size: 1rem;
     background-color: white;
     min-width: 200px;
     cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.column-select:hover {
+    border-color: #3498db;
+    background-color: #f8fbff;
+}
+
+.column-select:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
 .column-preview {
@@ -547,21 +631,36 @@ tr.selected {
     padding: 8px 16px;
     border-radius: 4px;
     border: 1px solid #3498db;
-    background: white;
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
     color: #3498db;
     cursor: pointer;
     font-weight: 600;
     transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
 }
 
 .small-button:hover {
-    background-color: #3498db;
+    background: linear-gradient(to bottom, #3498db, #2980b9);
     color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(52, 152, 219, 0.3);
+}
+
+.small-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(52, 152, 219, 0.3);
 }
 
 .small-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+    color: #95a5a6;
+    border-color: #bdc3c7;
+    transform: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 #pageInfo {
@@ -593,6 +692,10 @@ tr.selected {
 .dataframe-table td {
     padding: 8px;
     font-size: 0.85rem;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Футер модального окна */
@@ -612,22 +715,43 @@ tr.selected {
     cursor: pointer;
     transition: all 0.2s;
     font-size: 1rem;
+    position: relative;
+    overflow: hidden;
 }
 
 .modal-button.primary {
-    background-color: #3498db;
+    background: linear-gradient(to right, #3498db, #2980b9);
     color: white;
+    box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3);
+}
+
+.modal-button.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(52, 152, 219, 0.4);
+    background: linear-gradient(to right, #2980b9, #2573a7);
 }
 
 .modal-button.secondary {
-    background-color: #f8f9fa;
-    color: #333;
-    border: 1px solid #ddd;
+    background: linear-gradient(to right, #95a5a6, #7f8c8d);
+    color: white;
+    box-shadow: 0 3px 8px rgba(149, 165, 166, 0.3);
 }
 
-.modal-button:hover {
+.modal-button.secondary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 12px rgba(149, 165, 166, 0.4);
+    background: linear-gradient(to right, #7f8c8d, #6c7b7d);
+}
+
+.modal-button:active {
+    transform: translateY(0);
+}
+
+.modal-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Индикатор загрузки */
@@ -674,199 +798,63 @@ tr.selected {
     text-decoration: underline;
 }
 
-/* Адаптивность */
-@media (max-width: 1024px) {
-    .container {
-        padding: 20px;
-    }
-    
-    .file-details {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    .file-input-button {
-        padding: 14px 28px;
-        font-size: 1.1rem;
-    }
-    
-    .modal {
-        max-height: 95vh;
-    }
-    
-    .format-list {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .mapping-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .column-name {
-        min-width: auto;
-    }
-    
-    .column-select {
-        width: 100%;
-    }
-    
-    .table-header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: flex-start;
-    }
-    
-    .table-actions {
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-    
-    .action-button {
-        padding: 8px 12px;
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 480px) {
-    body {
-        padding: 10px;
-    }
-    
-    .container {
-        padding: 15px;
-    }
-    
-    .file-input-button {
-        padding: 12px 24px;
-        font-size: 1rem;
-        width: 100%;
-    }
-    
-    .table-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .action-button {
-        width: 100%;
-        margin-bottom: 5px;
-    }
-    
-    .modal-footer {
-        flex-direction: column;
-    }
-    
-    .modal-button {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-}
-
-/* Предпросмотр данных в модальном окне */
-.preview-info {
-    text-align: center;
-    padding: 10px;
-    color: #7f8c8d;
-    font-style: italic;
-    font-size: 0.9rem;
-    border-top: 1px dashed #ddd;
-    margin-top: 10px;
-}
-
-/* Улучшения для модального окна */
-.mapping-section {
-    margin: 20px 0;
-}
-
-.column-select:focus {
-    border-color: #3498db;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-/* Анимация появления модального окна */
-.modal {
-    animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-50px) scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Адаптивность для модального окна */
-@media (max-width: 768px) {
-    .modal {
-        max-height: 85vh;
-        margin: 10px;
-    }
-    
-    .modal-content {
-        padding: 15px;
-    }
-    
-    .mapping-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-    
-    .column-name {
-        min-width: auto;
-        font-size: 1rem;
-    }
-    
-    .column-select {
-        width: 100%;
-    }
-}
-
-/* Стили для таблицы предпросмотра */
-.dataframe-table table {
-    font-size: 0.85rem;
-}
-
-.dataframe-table th {
-    background-color: #2c3e50;
-    padding: 10px 8px;
-    font-size: 0.85rem;
-}
-
-.dataframe-table td {
-    padding: 8px;
-    font-size: 0.85rem;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Анимация для модального окна */
-.modal {
-    transform: translateY(-20px);
+/* Анимация ripple-эффекта для всех кнопок */
+.file-input-button::after,
+.preview-button::after,
+.action-button::after,
+.modal-button::after,
+.small-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
     opacity: 0;
-    transition: all 0.3s ease-out;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
 }
 
-.modal.visible {
-    transform: translateY(0);
-    opacity: 1;
+.file-input-button:focus:not(:active)::after,
+.preview-button:focus:not(:active)::after,
+.action-button:focus:not(:active)::after,
+.modal-button:focus:not(:active)::after,
+.small-button:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(40, 40);
+        opacity: 0;
+    }
+}
+
+/* Фокус-состояния для доступности */
+.file-input-button:focus,
+.preview-button:focus,
+.action-button:focus,
+.modal-button:focus,
+.small-button:focus,
+.column-select:focus,
+.editable-cell:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.5);
+}
+
+/* Эффект нажатия для всех кнопок */
+.file-input-button:active,
+.preview-button:active,
+.action-button:active,
+.modal-button:active,
+.small-button:active {
+    transition: transform 0.1s;
 }
 
 /* Контейнер для таблицы предпросмотра */
@@ -913,31 +901,135 @@ td[title]:hover::after {
     border-radius: 0 0 8px 8px;
 }
 
-/* Улучшенные стили для выпадающих списков */
-.column-select {
-    padding: 10px 12px;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    background-color: white;
-    min-width: 200px;
-    cursor: pointer;
-    transition: border-color 0.3s;
+/* Эффект пульсации для привлечения внимания */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
 }
 
-.column-select:focus {
-    border-color: #3498db;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+.preview-button.pulse {
+    animation: pulse 2s infinite;
 }
 
-/* Состояния кнопок */
-.preview-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .container {
+        padding: 20px;
+    }
+    
+    .file-details {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
 }
 
-.preview-button:disabled:hover {
-    transform: none;
-    box-shadow: none;
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .file-input-button {
+        padding: 14px 28px;
+        font-size: 1.1rem;
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .modal {
+        max-height: 85vh;
+        margin: 10px;
+    }
+    
+    .modal-content {
+        padding: 15px;
+    }
+    
+    .format-list {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .mapping-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .column-name {
+        min-width: auto;
+        font-size: 1rem;
+    }
+    
+    .column-select {
+        width: 100%;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .table-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+    
+    .action-button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .preview-button {
+        padding: 12px 24px;
+        font-size: 1rem;
+        width: 100%;
+    }
+    
+    .modal-button {
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 15px;
+    }
+    
+    .file-input-button {
+        padding: 12px 24px;
+        font-size: 1rem;
+        width: 100%;
+    }
+    
+    .table-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .action-button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
 }

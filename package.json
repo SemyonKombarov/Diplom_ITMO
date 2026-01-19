@@ -1,0 +1,8 @@
+{
+  "name": "diplom",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/SemyonKombarov/Diplom_ITMO.git",
+  "author": "Semyon Kombarov <153325247+SemyonKombarov@users.noreply.github.com>",
+  "license": "MIT"
+}
