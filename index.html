@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор табличных данных</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Загружаем pandas-js с альтернативного источника -->
+    <script src="https://cdn.jsdelivr.net/npm/@pandas-js/pandas-js/dist/pandas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="icon">📊</div>
+            <h1>Редактор табличных данных</h1>
+            <p class="description">
+                Загрузите файл с координатами (CSV, TXT), назначьте столбцы и редактируйте данные в таблице
+            </p>
+        </header>
+        
+        <div class="formats">
+            <h3>Поддерживаемые форматы:</h3>
+            <div class="format-list">
+                <div class="format-item">
+                    <span class="format-icon csv">📑</span>
+                    <span>CSV (таблицы)</span>
+                </div>
+                <div class="format-item">
+                    <span class="format-icon txt">📄</span>
+                    <span>TXT (текст)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="file-input-wrapper">
+            <button class="file-input-button" id="customButton">
+                📂 Выбрать файл (.csv, .txt)
+            </button>
+            <input type="file" class="file-input" id="fileInput" accept=".csv,.txt">
+        </div>
+        
+        <div class="error" id="errorMessage">
+            <strong>Ошибка:</strong> <span id="errorText">Пожалуйста, выберите файл в одном из поддерживаемых форматов: .csv, .txt</span>
+        </div>
+        
+        <div class="file-info" id="fileInfo">
+            <h3>Информация о выбранном файле:</h3>
+            <ul class="file-details">
+                <li>
+                    <span class="label">Имя файла:</span>
+                    <span class="value" id="fileName">-</span>
+                </li>
+                <li>
+                    <span class="label">Размер:</span>
+                    <span class="value" id="fileSize">-</span>
+                </li>
+                <li>
+                    <span class="label">Тип файла:</span>
+                    <span class="value" id="fileType">-</span>
+                </li>
+                <li>
+                    <span class="label">Дата последнего изменения:</span>
+                    <span class="value" id="fileModified">-</span>
+                </li>
+            </ul>
+            
+            <button class="preview-button" id="previewButton">Назначить столбцы и загрузить данные</button>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+            <p>Загрузка и обработка файла...</p>
+        </div>
+        
+        <div class="table-container" id="tableContainer">
+            <div class="table-header">
+                <h2>Таблица координат</h2>
+                <div class="table-actions">
+                    <button class="action-button add" id="addRowButton">+ Добавить строку</button>
+                    <button class="action-button delete" id="deleteRowButton">- Удалить выбранные</button>
+                    <button class="action-button save" id="saveTableButton">💾 Сохранить CSV</button>
+                </div>
+            </div>
+            
+            <div id="tableWrapper">
+                <!-- Таблица будет вставлена сюда -->
+            </div>
+        </div>
+        
+        <p class="hint">
+            Максимальный размер файла для загрузки: 5 МБ.
+        </p>
+    </div>
+    
+    <!-- Модальное окно для назначения столбцов -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Назначение столбцов</h2>
+                <button class="close-button" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="column-mapping">
+                    <div class="mapping-instructions">
+                        <p><strong>Выберите столбцы из вашего файла для соответствия требуемым полям:</strong></p>
+                        <p>• <strong>Точка</strong> - название или идентификатор точки</p>
+                        <p>• <strong>X</strong> - координата по оси X</p>
+                        <p>• <strong>Y</strong> - координата по оси Y</p>
+                    </div>
+                    
+                    <div class="mapping-section">
+                        <div class="mapping-row">
+                            <span class="column-name">Точка:</span>
+                            <select class="column-select" id="pointColumnSelect">
+                                <option value="">-- Выберите столбец --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mapping-row">
+                            <span class="column-name">Координата X:</span>
+                            <select class="column-select" id="xColumnSelect">
+                                <option value="">-- Выберите столбец --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mapping-row">
+                            <span class="column-name">Координата Y:</span>
+                            <select class="column-select" id="yColumnSelect">
+                                <option value="">-- Выберите столбец --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dataframe-preview">
+                    <h3>Предварительный просмотр данных (первые 10 строк):</h3>
+                    <div class="dataframe-table" id="dataframePreview">
+                        <!-- Предпросмотр данных будет здесь -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-button secondary" id="cancelMapping">Отмена</button>
+                <button class="modal-button primary" id="applyMapping">Применить и создать таблицу</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Редактор табличных данных &copy; 2023</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
