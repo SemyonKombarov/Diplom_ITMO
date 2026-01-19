@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактор табличных данных</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Загружаем pandas-js с альтернативного источника -->
     <script src="https://cdn.jsdelivr.net/npm/@pandas-js/pandas-js/dist/pandas.min.js"></script>
 </head>
 <body>
@@ -14,10 +13,10 @@
             <!-- <div class="icon">📊</div> -->
             <h1>Перевод координат</h1>
             <p class="description">
-                Загрузите файл с координатами (CSV, TXT), назначьте столбцы и редактируйте данные в таблице
+                Загрузите файл с координатами (CSV, TXT) или создайте таблицу вручную
             </p>
         </header>
-        
+<!--         
         <div class="formats">
             <h3>Поддерживаемые форматы:</h3>
             <div class="format-list">
@@ -30,41 +29,57 @@
                     <span>TXT (текст)</span>
                 </div>
             </div>
-        </div>
+        </div> -->
         
-        <div class="file-input-wrapper">
-            <button class="file-input-button" id="customButton">
-                📂 Выбрать файл (.csv, .txt)
-            </button>
-            <input type="file" class="file-input" id="fileInput" accept=".csv,.txt">
-        </div>
-        
-        <div class="error" id="errorMessage">
-            <strong>Ошибка:</strong> <span id="errorText">Пожалуйста, выберите файл в одном из поддерживаемых форматов: .csv, .txt</span>
-        </div>
-        
-        <div class="file-info" id="fileInfo">
-            <h3>Информация о выбранном файле:</h3>
-            <ul class="file-details">
-                <li>
-                    <span class="label">Имя файла:</span>
-                    <span class="value" id="fileName">-</span>
-                </li>
-                <li>
-                    <span class="label">Размер:</span>
-                    <span class="value" id="fileSize">-</span>
-                </li>
-                <li>
-                    <span class="label">Тип файла:</span>
-                    <span class="value" id="fileType">-</span>
-                </li>
-                <li>
-                    <span class="label">Дата последнего изменения:</span>
-                    <span class="value" id="fileModified">-</span>
-                </li>
-            </ul>
+        <div class="file-selection-container">
+            <div class="file-input-section">
+                <h3>Выберите способ создания таблицы:</h3>
+                <div class="selection-options">
+                    <div class="file-input-wrapper">
+                        <button class="file-input-button" id="customButton">
+                            📂 Выбрать файл (.csv, .txt)
+                        <input type="file" class="file-input" id="fileInput" accept=".csv,.txt">
+                        </button>
+                        
+                    </div>
+                    
+                    <div class="or-divider">
+                        <span>или</span>
+                    </div>
+                    
+                    <button class="manual-button" id="manualButton">
+                        ✏️ Создать вручную
+                    </button>
+                </div>
+                
+                <div class="error" id="errorMessage">
+                    <strong>Ошибка:</strong> <span id="errorText">Пожалуйста, выберите файл в одном из поддерживаемых форматов: .csv, .txt</span>
+                </div>
+            </div>
             
-            <button class="preview-button" id="previewButton">Назначить столбцы и загрузить данные</button>
+            <div class="file-info" id="fileInfo">
+                <h3>Информация о выбранном файле:</h3>
+                <ul class="file-details">
+                    <li>
+                        <span class="label">Имя файла:</span>
+                        <span class="value" id="fileName">-</span>
+                    </li>
+                    <li>
+                        <span class="label">Размер:</span>
+                        <span class="value" id="fileSize">-</span>
+                    </li>
+                    <li>
+                        <span class="label">Тип файла:</span>
+                        <span class="value" id="fileType">-</span>
+                    </li>
+                    <li>
+                        <span class="label">Дата последнего изменения:</span>
+                        <span class="value" id="fileModified">-</span>
+                    </li>
+                </ul>
+                
+                <button class="preview-button" id="previewButton">Назначить столбцы и загрузить данные</button>
+            </div>
         </div>
         
         <div class="loading" id="loadingIndicator">
@@ -88,7 +103,7 @@
         </div>
         
         <p class="hint">
-            Максимальный размер файла для загрузки: 5 МБ.
+            Перевод координат &copy; 2026
         </p>
     </div>
     
@@ -147,7 +162,7 @@
     </div>
     
     <div class="footer">
-        <p>Перевод координат &copy; 2026</p>
+        <!-- <p>Перевод координат &copy; 2026</p> -->
     </div>
 
     <script src="app.js"></script>

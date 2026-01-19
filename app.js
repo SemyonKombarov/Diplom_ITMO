@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Элементы DOM
     const fileInput = document.getElementById('fileInput');
     const customButton = document.getElementById('customButton');
+    const manualButton = document.getElementById('manualButton');
     const fileInfo = document.getElementById('fileInfo');
     const fileName = document.getElementById('fileName');
     const fileSize = document.getElementById('fileSize');
@@ -35,9 +36,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let fileData = null;
     let columns = [];
     let tableData = [];
+    let isManualCreation = false;
     
-    // Инициализация - скрываем модальное окно
+    // Инициализация - скрываем модальное окно и таблицу
     modalOverlay.style.display = 'none';
+    tableContainer.style.display = 'none';
     
     // При клике на кастомную кнопку активируем скрытый input
     customButton.addEventListener('click', function() {
@@ -48,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fileInput.addEventListener('change', function() {
         if (this.files && this.files.length > 0) {
             selectedFile = this.files[0];
+            isManualCreation = false;
             
             // Проверяем расширение файла
             const fileName = selectedFile.name.toLowerCase();
@@ -74,15 +78,31 @@ document.addEventListener('DOMContentLoaded', function() {
             // Отображаем информацию о файле
             displayFileInfo(selectedFile);
             
-            // Меняем текст кнопки
-            customButton.innerHTML = '📁 Выбрать другой файл';
-            
             // Скрываем таблицу, если она была отображена
             tableContainer.style.display = 'none';
             
             // Активируем кнопку предпросмотра
             previewButton.disabled = false;
+            
         }
+    });
+    
+    // Кнопка "Создать вручную"
+    manualButton.addEventListener('click', function() {
+        isManualCreation = true;
+        selectedFile = null;
+        
+        // Скрываем информацию о файле
+        hideFileInfo();
+        
+        // Скрываем ошибки
+        hideError();
+        
+        // Создаем пустую таблицу с одной строкой
+        createEmptyTable();
+        
+        // Показываем таблицу
+        tableContainer.style.display = 'block';
     });
     
     // Показать модальное окно для назначения столбцов
@@ -166,6 +186,19 @@ document.addEventListener('DOMContentLoaded', function() {
     saveTableButton.addEventListener('click', function() {
         saveTableDataAsCSV();
     });
+    
+    // Функция для создания пустой таблицы
+    function createEmptyTable() {
+        tableData = [{
+            id: 1,
+            point: '',
+            x: '',
+            y: '',
+            selected: false
+        }];
+        
+        renderTable();
+    }
     
     // Функция для загрузки и парсинга файла
     async function loadAndParseFile(file) {
@@ -294,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Заголовок таблицы
         previewHTML += '<thead><tr>';
-        previewHTML += '<th>№</th>';
+        previewHTML += '<th class="row-number">№</th>';
         headers.forEach(header => {
             previewHTML += `<th>${escapeHtml(header)}</th>`;
         });
@@ -595,9 +628,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         tableData.push({
             id: newId,
-            point: `Точка ${newId}`,
-            x: '0.0',
-            y: '0.0',
+            point: '',
+            x: '',
+            y: '',
             selected: false
         });
         
