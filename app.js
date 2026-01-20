@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingIndicator = document.getElementById('loadingIndicator');
     const tableContainer = document.getElementById('tableContainer');
     const tableWrapper = document.getElementById('tableWrapper');
+    const coordinateSystemsContainer = document.getElementById('coordinateSystemsContainer');
     
     // Элементы модального окна
     const modalOverlay = document.getElementById('modalOverlay');
@@ -30,22 +31,160 @@ document.addEventListener('DOMContentLoaded', function() {
     const addRowButton = document.getElementById('addRowButton');
     const deleteRowButton = document.getElementById('deleteRowButton');
     const saveTableButton = document.getElementById('saveTableButton');
+    const swapTableButton = document.getElementById('swapTableButton');
+    
+    // Элементы контейнера систем координат
+    const swapCoordinatesButton = document.getElementById('swapCoordinatesButton');
+    const transformButton = document.getElementById('transformButton');
+    const resetButton = document.getElementById('resetButton');
+
+    // Переменные для систем координат
+    const sourceSystemInput = document.getElementById('sourceSystemInput');
+    const targetSystemInput = document.getElementById('targetSystemInput');
+    const sourceDropdown = document.getElementById('sourceDropdown');
+    const targetDropdown = document.getElementById('targetDropdown');
+    const sourceSystemInfo = document.getElementById('sourceSystemInfo');
+    const targetSystemInfo = document.getElementById('targetSystemInfo');
     
     // Глобальные переменные
     let selectedFile = null;
     let fileData = null;
     let columns = [];
     let tableData = [];
+    let originalTableData = []; // Сохраняем оригинальные данные для сброса
     let isManualCreation = false;
+    const coordinateSystems = [
+        {
+            id: 'wgs84',
+            name: 'WGS 84',
+            code: 'EPSG:4326',
+            description: 'Всемирная геодезическая система 1984 года',
+            type: 'географическая',
+            ellipsoid: 'WGS 84',
+            area: 'Весь мир',
+            datum: 'WGS84'
+        },
+        {
+            id: 'sk42',
+            name: 'СК-42',
+            code: 'EPSG:4284',
+            description: 'Система координат 1942 года',
+            type: 'географическая',
+            ellipsoid: 'Красовского',
+            area: 'СССР/Россия',
+            datum: 'Пулково 1942'
+        },
+        {
+            id: 'pulkovo42',
+            name: 'Пулково 1942',
+            code: 'EPSG:4284',
+            description: 'Пулковская система координат 1942 года',
+            type: 'географическая',
+            ellipsoid: 'Красовского',
+            area: 'СССР/Россия',
+            datum: 'Пулково 1942'
+        },
+        {
+            id: 'msk',
+            name: 'МСК',
+            code: 'Местная СК',
+            description: 'Местная система координат',
+            type: 'плоская прямоугольная',
+            ellipsoid: 'Красовского',
+            area: 'Локальная зона',
+            datum: 'Местный'
+        },
+        {
+            id: 'msk52',
+            name: 'МСК-52',
+            code: 'СК-52',
+            description: 'Московская система координат 1952 года',
+            type: 'плоская прямоугольная',
+            ellipsoid: 'Красовского',
+            area: 'Московская область',
+            datum: 'Пулково 1942'
+        },
+        {
+            id: 'msk63',
+            name: 'МСК-63',
+            code: 'СК-63',
+            description: 'Московская система координат 1963 года',
+            type: 'плоская прямоугольная',
+            ellipsoid: 'Красовского',
+            area: 'Московская область',
+            datum: 'Пулково 1942'
+        },
+        {
+            id: 'utmn',
+            name: 'UTM Северное',
+            code: 'EPSG:326XX',
+            description: 'Универсальная поперечная проекция Меркатора',
+            type: 'проекционная',
+            ellipsoid: 'WGS 84',
+            area: 'Зональная',
+            datum: 'WGS84'
+        },
+        {
+            id: 'utms',
+            name: 'UTM Южное',
+            code: 'EPSG:327XX',
+            description: 'Универсальная поперечная проекция Меркатора',
+            type: 'проекционная',
+            ellipsoid: 'WGS 84',
+            area: 'Зональная',
+            datum: 'WGS84'
+        },
+        {
+            id: 'gauss',
+            name: 'Гаусс-Крюгер',
+            code: 'СК-42 ГК',
+            description: 'Проекция ГауссаКрюгера',
+            type: 'проекционная',
+            ellipsoid: 'Красовского',
+            area: 'СССР/Россия',
+            datum: 'Пулково 1942'
+        },
+        {
+            id: 'cgcs2000',
+            name: 'CGCS 2000',
+            code: 'EPSG:4490',
+            description: 'Китайская геодезическая система координат 2000',
+            type: 'географическая',
+            ellipsoid: 'CGCS2000',
+            area: 'Китай',
+            datum: 'CGCS2000'
+        },
+        {
+            id: 'nad83',
+            name: 'NAD83',
+            code: 'EPSG:4269',
+            description: 'Североамериканская система 1983 года',
+            type: 'географическая',
+            ellipsoid: 'GRS 80',
+            area: 'Северная Америка',
+            datum: 'NAD83'
+        },
+        {
+            id: 'ed50',
+            name: 'ED50',
+            code: 'EPSG:4230',
+            description: 'Европейская система 1950 года',
+            type: 'географическая',
+            ellipsoid: 'International 1924',
+            area: 'Европа',
+            datum: 'European 1950'
+        }
+    ];
     
-    // Инициализация - скрываем модальное окно и таблицу
+    // Инициализация - скрываем модальное окно, таблицу и контейнер систем координат
     modalOverlay.style.display = 'none';
     tableContainer.style.display = 'none';
+    coordinateSystemsContainer.style.display = 'none';
     
-    // При клике на кастомную кнопку активируем скрытый input
-    customButton.addEventListener('click', function() {
-        fileInput.click();
-    });
+    // // При клике на кастомную кнопку активируем скрытый input
+    // customButton.addEventListener('click', function() {
+    //     fileInput.click();
+    // });
     
     // При изменении выбора файла
     fileInput.addEventListener('change', function() {
@@ -78,12 +217,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Отображаем информацию о файле
             displayFileInfo(selectedFile);
             
-            // Скрываем таблицу, если она была отображена
+            // Скрываем таблицу и контейнер систем координат
             tableContainer.style.display = 'none';
+            coordinateSystemsContainer.style.display = 'none';
             
             // Активируем кнопку предпросмотра
             previewButton.disabled = false;
-            
         }
     });
     
@@ -103,6 +242,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Показываем таблицу
         tableContainer.style.display = 'block';
+        
+        // Показываем контейнер систем координат
+        coordinateSystemsContainer.style.display = 'block';
     });
     
     // Показать модальное окно для назначения столбцов
@@ -187,6 +329,64 @@ document.addEventListener('DOMContentLoaded', function() {
         saveTableDataAsCSV();
     });
     
+    // Кнопка замены координат в таблице
+    swapTableButton.addEventListener('click', function() {
+        swapCoordinatesInTable();
+    });
+    
+    // Кнопка замены систем координат
+    swapCoordinatesButton.addEventListener('click', function() {
+        swapCoordinateSystems();
+    });
+    
+    // Кнопка применения преобразования
+    transformButton.addEventListener('click', function() {
+        applyCoordinateTransformation();
+    });
+    
+    // Кнопка сброса к исходным данным
+    resetButton.addEventListener('click', function() {
+        resetToOriginalData();
+    });
+    
+    // Обработчики для автодополнения систем координат
+    sourceSystemInput.addEventListener('input', function() {
+        handleAutocomplete(this, sourceDropdown, sourceSystemInfo);
+    });
+    
+    targetSystemInput.addEventListener('input', function() {
+        handleAutocomplete(this, targetDropdown, targetSystemInfo);
+    });
+    
+    sourceSystemInput.addEventListener('focus', function() {
+        if (this.value.trim() !== '') {
+            handleAutocomplete(this, sourceDropdown, sourceSystemInfo);
+        }
+    });
+    
+    targetSystemInput.addEventListener('focus', function() {
+        if (this.value.trim() !== '') {
+            handleAutocomplete(this, targetDropdown, targetSystemInfo);
+        }
+    });
+    
+    // Закрытие выпадающих списков при клике вне их
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.input-with-dropdown')) {
+            sourceDropdown.style.display = 'none';
+            targetDropdown.style.display = 'none';
+        }
+    });
+    
+    // Навигация с клавиатуры в выпадающих списках
+    sourceSystemInput.addEventListener('keydown', function(e) {
+        handleDropdownNavigation(e, sourceDropdown, this);
+    });
+    
+    targetSystemInput.addEventListener('keydown', function(e) {
+        handleDropdownNavigation(e, targetDropdown, this);
+    });
+    
     // Функция для создания пустой таблицы
     function createEmptyTable() {
         tableData = [{
@@ -197,7 +397,142 @@ document.addEventListener('DOMContentLoaded', function() {
             selected: false
         }];
         
+        originalTableData = JSON.parse(JSON.stringify(tableData));
         renderTable();
+    }
+    
+    // Функция для замены координат X и Y местами
+function swapCoordinatesInTable() {
+    if (tableData.length === 0) {
+        alert('Таблица пуста. Нет данных для замены.');
+        return;
+    }
+    
+    // Сохраняем текущие данные как оригинальные, если еще не сохранены
+    if (originalTableData.length === 0) {
+        originalTableData = JSON.parse(JSON.stringify(tableData));
+    }
+    
+    // Меняем местами X и Y
+    tableData.forEach(row => {
+        const temp = row.x;
+        row.x = row.y;
+        row.y = temp;
+    });
+    
+    // Обновляем отображение таблицы
+    renderTable();
+    
+    // Добавляем анимацию к кнопке swapTableButton (только для таблицы)
+    swapTableButton.classList.add('swap-animation');
+    
+    // Убираем класс анимации после завершения
+    setTimeout(() => {
+        swapTableButton.classList.remove('swap-animation');
+    }, 500);
+}
+    
+    // Функция для замены систем координат местами
+    // Функция для замены систем координат местами
+function swapCoordinateSystems() {
+    const tempValue = sourceSystemInput.value;
+    const tempInfo = sourceSystemInfo.innerHTML;
+    
+    sourceSystemInput.value = targetSystemInput.value;
+    targetSystemInput.value = tempValue;
+    
+    sourceSystemInfo.innerHTML = targetSystemInfo.innerHTML;
+    targetSystemInfo.innerHTML = tempInfo;
+    
+    // Обновляем видимость блоков с информацией
+    if (sourceSystemInfo.innerHTML.trim() !== '') {
+        sourceSystemInfo.classList.add('visible');
+    } else {
+        sourceSystemInfo.classList.remove('visible');
+    }
+    
+    if (targetSystemInfo.innerHTML.trim() !== '') {
+        targetSystemInfo.classList.add('visible');
+    } else {
+        targetSystemInfo.classList.remove('visible');
+    }
+    
+    // Добавляем анимацию ТОЛЬКО к swapCoordinatesButton
+    swapCoordinatesButton.classList.add('swap-animation');
+    setTimeout(() => {
+        swapCoordinatesButton.classList.remove('swap-animation');
+    }, 500);
+    
+    console.log('Системы координат поменяны местами');
+}
+    
+    // Функция для применения преобразования систем координат
+    function applyCoordinateTransformation() {
+        if (tableData.length === 0) {
+            alert('Таблица пуста. Нет данных для преобразования.');
+            return;
+        }
+        
+        const sourceSystemName = sourceSystemInput.value.trim();
+        const targetSystemName = targetSystemInput.value.trim();
+        
+        if (!sourceSystemName || !targetSystemName) {
+            alert('Пожалуйста, выберите исходную и целевую системы координат.');
+            return;
+        }
+        
+        // Находим выбранные системы в списке
+        const sourceSystem = coordinateSystems.find(sys => 
+            sys.name.toLowerCase() === sourceSystemName.toLowerCase() ||
+            sys.code.toLowerCase() === sourceSystemName.toLowerCase()
+        );
+        
+        const targetSystem = coordinateSystems.find(sys => 
+            sys.name.toLowerCase() === targetSystemName.toLowerCase() ||
+            sys.code.toLowerCase() === targetSystemName.toLowerCase()
+        );
+        
+        if (!sourceSystem || !targetSystem) {
+            alert('Пожалуйста, выберите системы координат из списка.');
+            return;
+        }
+        
+        if (sourceSystem.id === targetSystem.id) {
+            alert('Исходная и целевая системы координат одинаковые. Преобразование не требуется.');
+            return;
+        }
+        
+        // Сохраняем текущие данные как оригинальные, если еще не сохранены
+        if (originalTableData.length === 0) {
+            originalTableData = JSON.parse(JSON.stringify(tableData));
+        }
+        
+        // В реальном приложении здесь было бы преобразование координат
+        // между разными системами. Для демонстрации просто покажем сообщение.
+        
+        alert(`Преобразование координат из "${sourceSystem.name}" (${sourceSystem.code}) в "${targetSystem.name}" (${targetSystem.code}) применено.\n\nВ реальном приложении здесь будет выполнено математическое преобразование координат с учетом параметров эллипсоидов и проекций.`);
+        
+        // Обновляем отображение таблицы (в реальном приложении здесь были бы преобразованные координаты)
+        renderTable();
+    }
+    
+    // Функция для сброса к исходным данным
+    function resetToOriginalData() {
+        if (originalTableData.length === 0) {
+            alert('Нет сохраненных исходных данных для сброса.');
+            return;
+        }
+        
+        tableData = JSON.parse(JSON.stringify(originalTableData));
+        renderTable();
+        
+        // Очищаем поля систем координат
+        sourceSystemInput.value = '';
+        targetSystemInput.value = '';
+        sourceSystemInfo.classList.remove('visible');
+        targetSystemInfo.classList.remove('visible');
+        
+        alert('Данные сброшены к исходным значениям. Выбор систем координат очищен.');
     }
     
     // Функция для загрузки и парсинга файла
@@ -470,6 +805,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            // Сохраняем оригинальные данные
+            originalTableData = JSON.parse(JSON.stringify(tableData));
+            
             console.log('Создана таблица с', tableData.length, 'строками');
             
             // Отображаем таблицу
@@ -477,6 +815,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Показываем контейнер таблицы
             tableContainer.style.display = 'block';
+            
+            // Показываем контейнер систем координат
+            coordinateSystemsContainer.style.display = 'block';
             
         } catch (error) {
             console.error('Ошибка при создании таблицы:', error);
@@ -652,6 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (tableData.length === 0) {
             tableContainer.style.display = 'none';
+            coordinateSystemsContainer.style.display = 'none';
             alert(`Удалено ${deletedCount} строк. Таблица пуста.`);
         } else {
             renderTable();
@@ -765,5 +1107,158 @@ document.addEventListener('DOMContentLoaded', function() {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    // Функция для обработки автодополнения
+    function handleAutocomplete(inputElement, dropdown, infoElement) {
+        const query = inputElement.value.toLowerCase().trim();
+        
+        // Скрываем выпадающий список если запрос пустой
+        if (query === '') {
+            dropdown.style.display = 'none';
+            infoElement.classList.remove('visible');
+            return;
+        }
+        
+        // Фильтруем системы по запросу
+        const filteredSystems = coordinateSystems.filter(system => 
+            system.name.toLowerCase().includes(query) || 
+            system.code.toLowerCase().includes(query) ||
+            system.description.toLowerCase().includes(query) ||
+            (system.type && system.type.toLowerCase().includes(query))
+        );
+        
+        // Обновляем выпадающий список
+        updateAutocompleteDropdown(filteredSystems, dropdown, infoElement, inputElement);
+    }
+    
+    // Функция для обновления выпадающего списка
+    function updateAutocompleteDropdown(systems, dropdown, infoElement, inputElement) {
+        dropdown.innerHTML = '';
+        
+        if (systems.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'autocomplete-item no-results';
+            noResults.textContent = 'Система не найдена';
+            dropdown.appendChild(noResults);
+        } else {
+            systems.forEach(system => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.dataset.systemId = system.id;
+                item.tabIndex = 0;
+                
+                item.innerHTML = `
+                    <div class="system-name">${escapeHtml(system.name)}</div>
+                    <div class="system-code">${escapeHtml(system.code)}</div>
+                    <div class="system-description">${escapeHtml(system.description)}</div>
+                `;
+                
+                item.addEventListener('click', function() {
+                    selectSystem(system, dropdown, infoElement, inputElement);
+                });
+                
+                item.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        selectSystem(system, dropdown, infoElement, inputElement);
+                    }
+                });
+                
+                dropdown.appendChild(item);
+            });
+        }
+        
+        dropdown.style.display = 'block';
+        dropdown.style.zIndex = '1000';
+    }
+    
+    // Функция для выбора системы
+    function selectSystem(system, dropdown, infoElement, inputElement) {
+        inputElement.value = system.name;
+        dropdown.style.display = 'none';
+        
+        // Отображаем информацию о системе
+        displaySystemInfo(system, infoElement);
+        
+        // Фокусируемся на input
+        inputElement.focus();
+    }
+    
+    // Функция для отображения информации о системе
+    function displaySystemInfo(system, infoElement) {
+        infoElement.innerHTML = `
+            <div class="system-info-content">
+                <div class="system-header">
+                    <h4>${escapeHtml(system.name)}</h4>
+                    <span class="system-code-badge">${escapeHtml(system.code)}</span>
+                </div>
+                <p class="system-description">${escapeHtml(system.description)}</p>
+                <div class="system-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Тип:</span>
+                        <span class="detail-value">${escapeHtml(system.type)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Эллипсоид:</span>
+                        <span class="detail-value">${escapeHtml(system.ellipsoid)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Область:</span>
+                        <span class="detail-value">${escapeHtml(system.area)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Датум:</span>
+                        <span class="detail-value">${escapeHtml(system.datum)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        infoElement.classList.add('visible');
+    }
+    
+    // Функция для обработки навигации с клавиатуры
+    function handleDropdownNavigation(e, dropdown, inputElement) {
+        if (dropdown.style.display !== 'block') return;
+        
+        const items = dropdown.querySelectorAll('.autocomplete-item:not(.no-results)');
+        if (items.length === 0) return;
+        
+        const currentActive = dropdown.querySelector('.autocomplete-item.active');
+        let currentIndex = currentActive ? Array.from(items).indexOf(currentActive) : -1;
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (currentActive) currentActive.classList.remove('active');
+                currentIndex = (currentIndex + 1) % items.length;
+                items[currentIndex].classList.add('active');
+                items[currentIndex].scrollIntoView({ block: 'nearest' });
+                break;
+                
+            case 'ArrowUp':
+                e.preventDefault();
+                if (currentActive) currentActive.classList.remove('active');
+                currentIndex = (currentIndex - 1 + items.length) % items.length;
+                items[currentIndex].classList.add('active');
+                items[currentIndex].scrollIntoView({ block: 'nearest' });
+                break;
+                
+            case 'Enter':
+                e.preventDefault();
+                const activeItem = dropdown.querySelector('.autocomplete-item.active');
+                if (activeItem) {
+                    const systemId = activeItem.dataset.systemId;
+                    const system = coordinateSystems.find(s => s.id === systemId);
+                    if (system) {
+                        const infoElement = dropdown.id === 'sourceDropdown' ? sourceSystemInfo : targetSystemInfo;
+                        selectSystem(system, dropdown, infoElement, inputElement);
+                    }
+                }
+                break;
+                
+            case 'Escape':
+                dropdown.style.display = 'none';
+                break;
+        }
     }
 });
