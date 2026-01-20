@@ -5,11 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coordinate Systems Converter</title>
     <link rel="stylesheet" href="style_test.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="coordinate-systems-container" id="coordinateSystemsContainer">
             <h3>Настройка систем координат</h3>
+            
+            <!-- Кнопка загрузки базы данных -->
+            <div class="database-upload">
+                <input type="file" id="dbFileInput" accept=".db" style="display: none;">
+                <button id="loadDbButton" class="load-db-button">
+                    📁 Загрузить базу данных QGIS (.db)
+                </button>
+                <div id="dbStatus" class="db-status"></div>
+            </div>
+            
             <div class="coordinate-systems">
                 <div class="system-selection">
                     <div class="system-group">
@@ -56,5 +67,6 @@
     </div>
     
     <script src="autocomplete.js"></script>
+    <script src="database.js"></script>
 </body>
 </html>

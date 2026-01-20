@@ -1,5 +1,5 @@
-// Данные систем координат
-const coordinateSystems = [
+// Основные данные систем координат
+const baseCoordinateSystems = [
     {
         id: 'wgs84',
         name: 'WGS 84',
@@ -131,6 +131,9 @@ class Autocomplete {
         this.filteredSystems = [];
         this.isMouseOverDropdown = false;
         
+        // Объединяем базовые системы с системами из базы данных
+        this.allSystems = [...baseCoordinateSystems];
+        
         this.init();
     }
     
@@ -160,7 +163,7 @@ class Autocomplete {
         }
         
         // Фильтрация систем по запросу
-        this.filteredSystems = coordinateSystems.filter(system => {
+        this.filteredSystems = this.allSystems.filter(system => {
             return system.name.toLowerCase().includes(query) ||
                    system.code.toLowerCase().includes(query) ||
                    system.description.toLowerCase().includes(query);
@@ -222,7 +225,7 @@ class Autocomplete {
     }
     
     showAllSystems() {
-        this.filteredSystems = [...coordinateSystems];
+        this.filteredSystems = [...this.allSystems];
         this.updateDropdown();
     }
     
@@ -241,15 +244,33 @@ class Autocomplete {
         this.filteredSystems.forEach((system, index) => {
             const item = document.createElement('div');
             item.className = 'autocomplete-item';
+            
+            // Добавляем специальный класс для систем из базы данных
+            if (system.source === 'database') {
+                item.classList.add('db-item');
+            }
+            
             if (index === this.selectedIndex) {
                 item.classList.add('active');
             }
             
-            item.innerHTML = `
-                <div class="system-name">${system.name}</div>
-                <div class="system-code">${system.code}</div>
-                <div class="system-description">${system.description}</div>
-            `;
+            // Форматируем вывод в зависимости от источника данных
+            if (system.source === 'database') {
+                item.innerHTML = `
+                    <div class="system-name">
+                        <span class="srid">${system.code}</span>
+                        ${system.name}
+                    </div>
+                    <div class="system-description">${system.description}</div>
+                    <div class="auth-info">Тип: ${system.type}</div>
+                `;
+            } else {
+                item.innerHTML = `
+                    <div class="system-name">${system.name}</div>
+                    <div class="system-code">${system.code}</div>
+                    <div class="system-description">${system.description}</div>
+                `;
+            }
             
             // Используем mousedown вместо click, чтобы обработать раньше blur
             item.addEventListener('mousedown', (e) => {
@@ -308,17 +329,26 @@ class Autocomplete {
         this.selectedIndex = -1;
         this.isMouseOverDropdown = false;
     }
+    
+    // Метод для обновления списка систем
+    updateSystems(newSystems) {
+        this.allSystems = [...baseCoordinateSystems, ...newSystems];
+        // Если поле ввода не пустое, обновляем dropdown
+        if (this.input.value.trim() !== '') {
+            this.handleInput({ target: this.input });
+        }
+    }
 }
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     // Создаем экземпляры автодополнения для каждого поля
-    const sourceAutocomplete = new Autocomplete(
+    window.sourceAutocomplete = new Autocomplete(
         document.getElementById('sourceSystemInput'),
         document.getElementById('sourceDropdown')
     );
     
-    const targetAutocomplete = new Autocomplete(
+    window.targetAutocomplete = new Autocomplete(
         document.getElementById('targetSystemInput'),
         document.getElementById('targetDropdown')
     );
@@ -370,8 +400,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Закрытие выпадающих списков при клике вне их
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.input-with-dropdown')) {
-            sourceAutocomplete.hideDropdown();
-            targetAutocomplete.hideDropdown();
+            window.sourceAutocomplete.hideDropdown();
+            window.targetAutocomplete.hideDropdown();
         }
     });
+    
+    // Функция для обновления систем из базы данных (будет вызываться из database.js)
+    window.updateAutocompleteFromDatabase = (databaseSystems) => {
+        if (window.sourceAutocomplete && window.targetAutocomplete) {
+            window.sourceAutocomplete.updateSystems(databaseSystems);
+            window.targetAutocomplete.updateSystems(databaseSystems);
+        }
+    };
 });
