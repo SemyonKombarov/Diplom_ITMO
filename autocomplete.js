@@ -129,9 +129,7 @@ class Autocomplete {
         this.dropdown = dropdownElement;
         this.selectedIndex = -1;
         this.filteredSystems = [];
-        this.isMouseOverDropdown = false;
         this.input.selectedSystem = null;
-        this.input._isSelecting = false;
         
         this.init();
     }
@@ -142,14 +140,12 @@ class Autocomplete {
         this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
         this.input.addEventListener('blur', () => this.handleBlur());
         this.input.addEventListener('focus', () => this.handleFocus());
+        this.input.addEventListener('click', () => this.handleClick());
         
-        // Отслеживаем наведение мыши на dropdown
-        this.dropdown.addEventListener('mouseenter', () => {
-            this.isMouseOverDropdown = true;
-        });
-        
-        this.dropdown.addEventListener('mouseleave', () => {
-            this.isMouseOverDropdown = false;
+        // Обработчики для dropdown
+        this.dropdown.addEventListener('mousedown', (e) => {
+            // Предотвращаем blur при клике внутри dropdown
+            e.preventDefault();
         });
     }
     
@@ -206,12 +202,17 @@ class Autocomplete {
     }
     
     handleBlur() {
-        // Используем setTimeout чтобы дать время обработать клик на dropdown
+        // Закрываем dropdown с небольшой задержкой
         setTimeout(() => {
-            if (!this.isMouseOverDropdown) {
+            // Проверяем, активен ли dropdown или связанный с ним элемент
+            const activeElement = document.activeElement;
+            const isDropdownActive = activeElement === this.dropdown || 
+                                     this.dropdown.contains(activeElement);
+            
+            if (!isDropdownActive) {
                 this.hideDropdown();
             }
-        }, 150);
+        }, 200);
     }
     
     handleFocus() {
@@ -220,6 +221,13 @@ class Autocomplete {
         } else {
             // Показываем dropdown если есть текст в поле
             this.handleInput({ target: this.input });
+        }
+    }
+    
+    handleClick() {
+        // Показываем все системы при клике на пустое поле
+        if (this.input.value.trim() === '' || this.dropdown.style.display === 'none') {
+            this.showAllSystems();
         }
     }
     
@@ -253,14 +261,19 @@ class Autocomplete {
                 <div class="system-description">${system.description}</div>
             `;
             
-            // Используем mousedown вместо click, чтобы обработать раньше blur
+            // Обработчик клика на элементе списка
             item.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation(); // 🔴 КРИТИЧНО
-            this.selectSystem(system);
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Сначала устанавливаем фокус обратно на input
+                this.input.focus();
+                
+                // Затем выбираем систему
+                this.selectSystem(system);
             });
-
             
+            // Обработчик наведения мыши
             item.addEventListener('mouseenter', () => {
                 this.selectedIndex = index;
                 this.updateDropdown();
@@ -301,27 +314,30 @@ class Autocomplete {
     }
     
     selectSystem(system) {
-        this.input._isSelecting = true;
+        // Устанавливаем значение в input
         this.input.value = system.name;
+        
+        // Сохраняем выбранную систему
         this.input.selectedSystem = system;
         this.input.dataset.systemId = system.id;
         
-        // Сообщаем внешнему коду о выборе
+        // Скрываем dropdown
+        this.hideDropdown();
+        
+        // Устанавливаем фокус обратно на input
+        this.input.focus();
+        
+        // Генерируем событие выбора
         const selectionEvent = new CustomEvent('systemSelected', {
             detail: system,
             bubbles: true
         });
         this.input.dispatchEvent(selectionEvent);
-        
-        this.input._isSelecting = false;
-        this.hideDropdown();
     }
-
     
     hideDropdown() {
         this.dropdown.style.display = 'none';
         this.selectedIndex = -1;
-        this.isMouseOverDropdown = false;
     }
 }
 

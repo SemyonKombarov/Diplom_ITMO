@@ -2074,6 +2074,12 @@ td[title]:hover::after {
     margin-top: 4px;
 }
 
+/* Гарантируем, что вложенные элементы не блокируют события мыши */
+.autocomplete-item * {
+    pointer-events: auto;
+    user-select: none;
+}
+
 /* Информация о системе */
 .system-info {
     max-height: 0;

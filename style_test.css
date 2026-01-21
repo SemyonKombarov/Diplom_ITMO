@@ -227,6 +227,10 @@ body {
     border-bottom: 1px solid #eee;
     color: #2c3e50;
     font-size: 0.95rem;
+    -webkit-user-select: none; /* Запрещаем выделение текста */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .autocomplete-item:hover {
