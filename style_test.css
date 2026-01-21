@@ -288,6 +288,10 @@ body {
     justify-content: center;
 }
 
+.swap-button-container:hover {
+    /* Отключаем анимацию при наведении на контейнер */
+}
+
 .swap-button {
     width: 60px;
     height: 60px;
@@ -298,21 +302,20 @@ body {
     font-size: 1.8rem;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: none;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    margin: 0 auto;
 }
 
 .swap-button:hover {
-    transform: rotate(180deg) scale(1.1);
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-    background: linear-gradient(135deg, #2980b9, #8e44ad);
+    /* Отключаем анимацию при наведении */
 }
 
 .swap-button:active {
-    transform: rotate(180deg) scale(0.95);
+    transform: scale(0.95);
 }
 
 .helper-text {
@@ -342,11 +345,11 @@ body {
     }
     
     .swap-button:hover {
-        transform: rotate(270deg) scale(1.1);
+        /* Отключаем анимацию при наведении */
     }
     
     .swap-button:active {
-        transform: rotate(270deg) scale(0.95);
+        transform: rotate(90deg) scale(0.95);
     }
 }
 

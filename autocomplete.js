@@ -124,9 +124,11 @@ const coordinateSystems = [
 
 // Класс для управления автодополнением
 class Autocomplete {
-    constructor(inputElement, dropdownElement) {
+    constructor(inputElement, dropdownElement, infoElement, placeholder) {
         this.input = inputElement;
         this.dropdown = dropdownElement;
+        this.infoElement = infoElement;
+        this.placeholder = placeholder;
         this.selectedIndex = -1;
         this.filteredSystems = [];
         this.input.selectedSystem = null;
@@ -135,24 +137,32 @@ class Autocomplete {
     }
     
     init() {
+        // Изначально скрываем блок с информацией
+        if (this.infoElement) {
+            this.infoElement.style.display = 'none';
+            this.infoElement.innerHTML = `<p class="info-placeholder">${this.placeholder}</p>`;
+        }
+        
         // Обработчики событий
         this.input.addEventListener('input', (e) => this.handleInput(e));
         this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
-        this.input.addEventListener('blur', () => this.handleBlur());
+        this.input.addEventListener('blur', () => {
+            setTimeout(() => this.hideDropdown(), 200);
+        });
         this.input.addEventListener('focus', () => this.handleFocus());
         this.input.addEventListener('click', () => this.handleClick());
-        
-        // Обработчики для dropdown
-        this.dropdown.addEventListener('mousedown', (e) => {
-            // Предотвращаем blur при клике внутри dropdown
-            e.preventDefault();
-        });
     }
     
     handleInput(e) {
         const query = e.target.value.toLowerCase().trim();
         
         if (query === '') {
+            this.input.selectedSystem = null;
+            // Скрываем информацию при очистке поля
+            if (this.infoElement) {
+                this.infoElement.style.display = 'none';
+                this.infoElement.innerHTML = `<p class="info-placeholder">${this.placeholder}</p>`;
+            }
             this.showAllSystems();
             return;
         }
@@ -168,30 +178,40 @@ class Autocomplete {
     }
     
     handleKeyDown(e) {
+        if (this.dropdown.style.display !== 'block') return;
+        
+        const items = this.dropdown.querySelectorAll('.autocomplete-item:not(.no-results)');
+        if (items.length === 0) return;
+        
+        const currentActive = this.dropdown.querySelector('.autocomplete-item.active');
+        let currentIndex = currentActive ? Array.from(items).indexOf(currentActive) : -1;
+        
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                this.selectNext();
+                if (currentActive) currentActive.classList.remove('active');
+                currentIndex = (currentIndex + 1) % items.length;
+                items[currentIndex].classList.add('active');
+                items[currentIndex].scrollIntoView({ block: 'nearest' });
                 break;
                 
             case 'ArrowUp':
                 e.preventDefault();
-                this.selectPrev();
+                if (currentActive) currentActive.classList.remove('active');
+                currentIndex = (currentIndex - 1 + items.length) % items.length;
+                items[currentIndex].classList.add('active');
+                items[currentIndex].scrollIntoView({ block: 'nearest' });
                 break;
                 
             case 'Enter':
                 e.preventDefault();
-                if (this.selectedIndex >= 0 && this.selectedIndex < this.filteredSystems.length) {
-                    this.selectSystem(this.filteredSystems[this.selectedIndex]);
-                }
-                break;
-                
-            case 'Tab':
-                if (this.selectedIndex >= 0 && this.selectedIndex < this.filteredSystems.length) {
-                    e.preventDefault();
-                    this.selectSystem(this.filteredSystems[this.selectedIndex]);
-                } else {
-                    this.hideDropdown();
+                const activeItem = this.dropdown.querySelector('.autocomplete-item.active');
+                if (activeItem) {
+                    const systemId = activeItem.dataset.systemId;
+                    const system = coordinateSystems.find(s => s.id === systemId);
+                    if (system) {
+                        this.selectSystem(system);
+                    }
                 }
                 break;
                 
@@ -201,31 +221,15 @@ class Autocomplete {
         }
     }
     
-    handleBlur() {
-        // Закрываем dropdown с небольшой задержкой
-        setTimeout(() => {
-            // Проверяем, активен ли dropdown или связанный с ним элемент
-            const activeElement = document.activeElement;
-            const isDropdownActive = activeElement === this.dropdown || 
-                                     this.dropdown.contains(activeElement);
-            
-            if (!isDropdownActive) {
-                this.hideDropdown();
-            }
-        }, 200);
-    }
-    
     handleFocus() {
         if (this.input.value.trim() === '') {
             this.showAllSystems();
         } else {
-            // Показываем dropdown если есть текст в поле
             this.handleInput({ target: this.input });
         }
     }
     
     handleClick() {
-        // Показываем все системы при клике на пустое поле
         if (this.input.value.trim() === '' || this.dropdown.style.display === 'none') {
             this.showAllSystems();
         }
@@ -244,73 +248,52 @@ class Autocomplete {
             noResults.className = 'autocomplete-item no-results';
             noResults.textContent = 'Системы не найдены';
             this.dropdown.appendChild(noResults);
-            this.dropdown.style.display = 'block';
-            return;
+        } else {
+            this.filteredSystems.forEach((system, index) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.dataset.systemId = system.id;
+                item.tabIndex = 0;
+                
+                if (index === this.selectedIndex) {
+                    item.classList.add('active');
+                }
+                
+                item.innerHTML = `
+                    <div class="system-name">${system.name}</div>
+                    <div class="system-code">${system.code}</div>
+                    <div class="system-description">${system.description}</div>
+                `;
+                
+                // Простой обработчик клика
+                item.addEventListener('click', () => {
+                    this.selectSystem(system);
+                });
+                
+                // Обработчик наведения мыши
+                item.addEventListener('mouseenter', () => {
+                    // Убираем активный класс со всех элементов
+                    this.dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+                        el.classList.remove('active');
+                    });
+                    // Добавляем активный класс текущему элементу
+                    item.classList.add('active');
+                    this.selectedIndex = index;
+                });
+                
+                // Обработчик нажатия клавиши на элементе
+                item.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.selectSystem(system);
+                    }
+                });
+                
+                this.dropdown.appendChild(item);
+            });
         }
-        
-        this.filteredSystems.forEach((system, index) => {
-            const item = document.createElement('div');
-            item.className = 'autocomplete-item';
-            if (index === this.selectedIndex) {
-                item.classList.add('active');
-            }
-            
-            item.innerHTML = `
-                <div class="system-name">${system.name}</div>
-                <div class="system-code">${system.code}</div>
-                <div class="system-description">${system.description}</div>
-            `;
-            
-            // Обработчик клика на элементе списка
-            item.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Сначала устанавливаем фокус обратно на input
-                this.input.focus();
-                
-                // Затем выбираем систему
-                this.selectSystem(system);
-            });
-            
-            // Обработчик наведения мыши
-            item.addEventListener('mouseenter', () => {
-                this.selectedIndex = index;
-                this.updateDropdown();
-            });
-            
-            this.dropdown.appendChild(item);
-        });
         
         this.dropdown.style.display = 'block';
-    }
-    
-    selectNext() {
-        if (this.filteredSystems.length === 0) return;
-        
-        this.selectedIndex = (this.selectedIndex + 1) % this.filteredSystems.length;
-        this.updateDropdown();
-        
-        // Скролл к выбранному элементу
-        const selectedItem = this.dropdown.querySelector('.autocomplete-item.active');
-        if (selectedItem) {
-            selectedItem.scrollIntoView({ block: 'nearest' });
-        }
-    }
-    
-    selectPrev() {
-        if (this.filteredSystems.length === 0) return;
-        
-        this.selectedIndex = this.selectedIndex <= 0 ? 
-            this.filteredSystems.length - 1 : 
-            this.selectedIndex - 1;
-        this.updateDropdown();
-        
-        // Скролл к выбранному элементу
-        const selectedItem = this.dropdown.querySelector('.autocomplete-item.active');
-        if (selectedItem) {
-            selectedItem.scrollIntoView({ block: 'nearest' });
-        }
     }
     
     selectSystem(system) {
@@ -319,7 +302,9 @@ class Autocomplete {
         
         // Сохраняем выбранную систему
         this.input.selectedSystem = system;
-        this.input.dataset.systemId = system.id;
+        
+        // Показываем и обновляем информацию о системе
+        this.updateInfo(system);
         
         // Скрываем dropdown
         this.hideDropdown();
@@ -327,12 +312,32 @@ class Autocomplete {
         // Устанавливаем фокус обратно на input
         this.input.focus();
         
-        // Генерируем событие выбора
-        const selectionEvent = new CustomEvent('systemSelected', {
-            detail: system,
-            bubbles: true
-        });
-        this.input.dispatchEvent(selectionEvent);
+        console.log('Выбрана система:', system.name);
+    }
+    
+    updateInfo(system) {
+        if (!this.infoElement) return;
+        
+        if (!system) {
+            this.infoElement.style.display = 'none';
+            this.infoElement.innerHTML = `<p class="info-placeholder">${this.placeholder}</p>`;
+        } else {
+            this.infoElement.innerHTML = `
+                <div class="info-name">${system.name}</div>
+                <div class="info-tags">
+                    <span class="tag">${system.code}</span>
+                    <span class="tag">${system.type}</span>
+                </div>
+                <div class="info-meta">
+                    <span><strong>Эллипсоид:</strong> ${system.ellipsoid}</span>
+                    <span><strong>Регион:</strong> ${system.area}</span>
+                    <span><strong>Датум:</strong> ${system.datum}</span>
+                </div>
+                <p class="info-desc">${system.description}</p>
+            `;
+            this.infoElement.style.display = 'block';
+            this.infoElement.classList.add('visible');
+        }
     }
     
     hideDropdown() {
@@ -346,119 +351,66 @@ document.addEventListener('DOMContentLoaded', () => {
     // Создаем экземпляры автодополнения для каждого поля
     const sourceAutocomplete = new Autocomplete(
         document.getElementById('sourceSystemInput'),
-        document.getElementById('sourceDropdown')
+        document.getElementById('sourceDropdown'),
+        document.getElementById('sourceSystemInfo'),
+        'Выберите исходную систему'
     );
     
     const targetAutocomplete = new Autocomplete(
         document.getElementById('targetSystemInput'),
-        document.getElementById('targetDropdown')
-    );
-    
-    // Рендер карточек выбранных систем (опционально, если блоки существуют)
-    const sourceInfo = document.getElementById('sourceSystemInfo');
-    const targetInfo = document.getElementById('targetSystemInfo');
-
-    const renderSystemInfo = (container, system, placeholder) => {
-        if (!container) return;
-        if (!system) {
-            container.innerHTML = `<p class="info-placeholder">${placeholder}</p>`;
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="info-name">${system.name}</div>
-            <div class="info-tags">
-                <span class="tag">${system.code}</span>
-                <span class="tag">${system.type}</span>
-            </div>
-            <div class="info-meta">
-                <span><strong>Эллипсоид:</strong> ${system.ellipsoid}</span>
-                <span><strong>Регион:</strong> ${system.area}</span>
-                <span><strong>Датум:</strong> ${system.datum}</span>
-            </div>
-            <p class="info-desc">${system.description}</p>
-        `;
-    };
-
-    const attachSelectionHandlers = (input, container, placeholder) => {
-        if (!input || !container) return;
-        renderSystemInfo(container, null, placeholder);
-
-        input.addEventListener('systemSelected', (e) => {
-            input.selectedSystem = e.detail;
-            renderSystemInfo(container, e.detail, placeholder);
-        });
-
-        input.addEventListener('input', () => {
-            if (input._isSelecting) return; // Не очищаем при программной установке
-            input.selectedSystem = null;
-            renderSystemInfo(container, null, placeholder);
-        });
-    };
-
-    attachSelectionHandlers(
-        document.getElementById('sourceSystemInput'),
-        sourceInfo,
-        'Выберите исходную систему'
-    );
-
-    attachSelectionHandlers(
-        document.getElementById('targetSystemInput'),
-        targetInfo,
+        document.getElementById('targetDropdown'),
+        document.getElementById('targetSystemInfo'),
         'Выберите целевую систему'
     );
     
     // Обработчик для кнопки замены
     const swapButton = document.getElementById('swapCoordinatesButton');
     swapButton.addEventListener('click', () => {
-        // Меняем значения полей ввода
-        const sourceValue = document.getElementById('sourceSystemInput').value;
-        const targetValue = document.getElementById('targetSystemInput').value;
-        const sourceSystem = document.getElementById('sourceSystemInput').selectedSystem;
-        const targetSystem = document.getElementById('targetSystemInput').selectedSystem;
+        const sourceInput = document.getElementById('sourceSystemInput');
+        const targetInput = document.getElementById('targetSystemInput');
+        const sourceInfo = document.getElementById('sourceSystemInfo');
+        const targetInfo = document.getElementById('targetSystemInfo');
         
-        document.getElementById('sourceSystemInput').value = targetValue;
-        document.getElementById('targetSystemInput').value = sourceValue;
-
-        document.getElementById('sourceSystemInput').selectedSystem = targetSystem;
-        document.getElementById('targetSystemInput').selectedSystem = sourceSystem;
-
-        renderSystemInfo(sourceInfo, targetSystem, 'Выберите исходную систему');
-        renderSystemInfo(targetInfo, sourceSystem, 'Выберите целевую систему');
+        // Сохраняем текущие значения
+        const sourceValue = sourceInput.value;
+        const targetValue = targetInput.value;
+        const sourceSystem = sourceInput.selectedSystem;
+        const targetSystem = targetInput.selectedSystem;
+        
+        // Меняем значения местами
+        sourceInput.value = targetValue;
+        targetInput.value = sourceValue;
+        
+        // Меняем выбранные системы местами
+        sourceInput.selectedSystem = targetSystem;
+        targetInput.selectedSystem = sourceSystem;
+        
+        // Обновляем информацию в блоках
+        if (targetSystem) {
+            sourceAutocomplete.updateInfo(targetSystem);
+        } else {
+            // Если целевая система была пуста, скрываем блок информации
+            sourceInfo.style.display = 'none';
+            sourceInfo.innerHTML = '<p class="info-placeholder">Выберите исходную систему</p>';
+        }
+        
+        if (sourceSystem) {
+            targetAutocomplete.updateInfo(sourceSystem);
+        } else {
+            // Если исходная система была пуста, скрываем блок информации
+            targetInfo.style.display = 'none';
+            targetInfo.innerHTML = '<p class="info-placeholder">Выберите целевую систему</p>';
+        }
         
         // Анимация кнопки
         swapButton.classList.add('swap-animation');
         setTimeout(() => {
             swapButton.classList.remove('swap-animation');
         }, 500);
+        
+        // Фокусируемся на исходном поле после обмена
+        sourceInput.focus();
     });
-    
-    // Добавляем стиль для анимации кнопки
-    const style = document.createElement('style');
-    style.textContent = `
-        .swap-animation {
-            animation: rotateSwap 0.5s ease;
-        }
-        
-        @keyframes rotateSwap {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.1); }
-            100% { transform: rotate(360deg) scale(1); }
-        }
-        
-        @media (max-width: 1024px) {
-            .swap-animation {
-                animation: rotateSwapMobile 0.5s ease;
-            }
-            
-            @keyframes rotateSwapMobile {
-                0% { transform: rotate(90deg) scale(1); }
-                50% { transform: rotate(270deg) scale(1.1); }
-                100% { transform: rotate(450deg) scale(1); }
-            }
-        }
-    `;
-    document.head.appendChild(style);
     
     // Закрытие выпадающих списков при клике вне их
     document.addEventListener('click', (e) => {

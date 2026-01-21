@@ -21,11 +21,11 @@
                 <h3>Выберите способ создания таблицы:</h3>
                 <div class="selection-options">
                     <div class="file-input-wrapper">
-    <label class="file-input-button" id="customButton">
-        📂 Выбрать файл (.csv, .txt)
-        <input type="file" class="file-input" id="fileInput" accept=".csv,.txt">
-    </label>
-</div>
+                        <label class="file-input-button" id="customButton">
+                            📂 Выбрать файл (.csv, .txt)
+                            <input type="file" class="file-input" id="fileInput" accept=".csv,.txt">
+                        </label>
+                    </div>
                     
                     <div class="or-divider">
                         <span>или</span>
@@ -36,7 +36,7 @@
                     </button>
                 </div>
                 
-                <div class="error" id="errorMessage">
+                <div class="error" id="errorMessage" style="display: none;">
                     <strong>Ошибка:</strong> <span id="errorText">Пожалуйста, выберите файл в одном из поддерживаемых форматов: .csv, .txt</span>
                 </div>
             </div>
@@ -71,58 +71,60 @@
             <p>Загрузка и обработка файла...</p>
         </div>
         
-        <!-- НОВЫЙ КОНТЕЙНЕР: Выбор систем координат -->
-<div class="coordinate-systems-container" id="coordinateSystemsContainer">
-    <h3>Настройка систем координат</h3>
-    <div class="coordinate-systems">
-        <div class="system-selection">
-            <div class="system-group">
-                <h4>Исходная система координат:</h4>
-                <div class="system-input-container">
-                    <div class="input-with-dropdown">
-                        <input type="text" 
-                               class="system-input" 
-                               id="sourceSystemInput" 
-                               placeholder="Введите название системы (например: WGS 84, СК-42, МСК)..."
-                               autocomplete="off">
-                        <div class="autocomplete-dropdown" id="sourceDropdown">
-                            <!-- Предложения будут появляться здесь -->
+        <!-- КОНТЕЙНЕР: Выбор систем координат -->
+        <div class="coordinate-systems-container" id="coordinateSystemsContainer">
+            <h3>Настройка систем координат</h3>
+            <div class="coordinate-systems">
+                <div class="system-selection">
+                    <div class="system-group">
+                        <h4>Исходная система координат:</h4>
+                        <div class="system-input-container">
+                            <div class="input-with-dropdown">
+                                <input type="text" 
+                                       class="system-input" 
+                                       id="sourceSystemInput" 
+                                       placeholder="Введите название системы (например: WGS 84, СК-42, МСК)..."
+                                       autocomplete="off">
+                                <div class="autocomplete-dropdown" id="sourceDropdown">
+                                    <!-- Предложения будут появляться здесь -->
+                                </div>
+                            </div>
+                            <div class="system-info" id="sourceSystemInfo">
+                                <!-- Информация о выбранной системе -->
+                            </div>
                         </div>
                     </div>
-                    <div class="system-info" id="sourceSystemInfo">
-                        <!-- Информация о выбранной системе будет здесь -->
+                    
+                    <div class="swap-button-container">
+                        <button class="action-button swap-system" id="swapCoordinatesButton" 
+                                title="Поменять местами системы координат" data-swap-type="system">
+                            ↕ Поменять системы
+                        </button>
+                    </div>
+                    
+                    <div class="system-group">
+                        <h4>Целевая система координат:</h4>
+                        <div class="system-input-container">
+                            <div class="input-with-dropdown">
+                                <input type="text" 
+                                       class="system-input" 
+                                       id="targetSystemInput" 
+                                       placeholder="Введите название системы (например: Пулково 1942, МСК-52)..."
+                                       autocomplete="off">
+                                <div class="autocomplete-dropdown" id="targetDropdown">
+                                    <!-- Предложения будут появляться здесь -->
+                                </div>
+                            </div>
+                            <div class="system-info" id="targetSystemInfo">
+                                <!-- Информация о выбранной системе -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="swap-button-container">
-                <button class="swap-button" id="swapCoordinatesButton" 
-        title="Поменять местами системы координат" data-swap-type="system">
-    &harr;
-</button>
-            </div>
-            
-            <div class="system-group">
-                <h4>Целевая система координат:</h4>
-                <div class="system-input-container">
-                    <div class="input-with-dropdown">
-                        <input type="text" 
-                               class="system-input" 
-                               id="targetSystemInput" 
-                               placeholder="Введите название системы (например: Пулково 1942, МСК-52)..."
-                               autocomplete="off">
-                        <div class="autocomplete-dropdown" id="targetDropdown">
-                            <!-- Предложения будут появляться здесь -->
-                        </div>
-                    </div>
-                    <div class="system-info" id="targetSystemInfo">
-                        <!-- Информация о выбранной системе будет здесь -->
-                    </div>
-                </div>
-            </div>
+            <p class="helper-text">Подсказка: используйте стрелки ↑/↓ и Enter для выбора из списка.</p>
         </div>
-    </div>
-</div>
         
         <div class="table-container" id="tableContainer">
             <div class="table-header">
@@ -131,9 +133,9 @@
                     <button class="action-button add" id="addRowButton">+ Добавить строку</button>
                     <button class="action-button delete" id="deleteRowButton">- Удалить выбранные</button>
                     <button class="action-button swap" id="swapTableButton" 
-        title="Поменять местами значения X и Y" data-swap-type="table">
-    Поменять X↔Y
-</button>
+                            title="Поменять местами значения X и Y" data-swap-type="table">
+                        Поменять X↔Y
+                    </button>
                     <button class="action-button save" id="saveTableButton">💾 Сохранить CSV</button>
                 </div>
             </div>
@@ -142,7 +144,8 @@
                 <!-- Таблица будет вставлена сюда -->
             </div>
         </div>
-    <header></header>
+        
+        <header></header>
         <p class="hint">
             Перевод координат &copy; 2026
         </p>
@@ -206,6 +209,7 @@
         <!-- <p>Перевод координат &copy; 2026</p> -->
     </div>
 
+    <script src="autocomplete.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
