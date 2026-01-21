@@ -130,6 +130,8 @@ class Autocomplete {
         this.selectedIndex = -1;
         this.filteredSystems = [];
         this.isMouseOverDropdown = false;
+        this.input.selectedSystem = null;
+        this.input._isSelecting = false;
         
         this.init();
     }
@@ -253,9 +255,11 @@ class Autocomplete {
             
             // Используем mousedown вместо click, чтобы обработать раньше blur
             item.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // Предотвращаем blur на input
-                this.selectSystem(system);
+            e.preventDefault();
+            e.stopPropagation(); // 🔴 КРИТИЧНО
+            this.selectSystem(system);
             });
+
             
             item.addEventListener('mouseenter', () => {
                 this.selectedIndex = index;
@@ -297,11 +301,22 @@ class Autocomplete {
     }
     
     selectSystem(system) {
+        this.input._isSelecting = true;
         this.input.value = system.name;
+        this.input.selectedSystem = system;
+        this.input.dataset.systemId = system.id;
+        
+        // Сообщаем внешнему коду о выборе
+        const selectionEvent = new CustomEvent('systemSelected', {
+            detail: system,
+            bubbles: true
+        });
+        this.input.dispatchEvent(selectionEvent);
+        
+        this.input._isSelecting = false;
         this.hideDropdown();
-        // Возвращаем фокус на input
-        setTimeout(() => this.input.focus(), 10);
     }
+
     
     hideDropdown() {
         this.dropdown.style.display = 'none';
@@ -323,15 +338,77 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('targetDropdown')
     );
     
+    // Рендер карточек выбранных систем (опционально, если блоки существуют)
+    const sourceInfo = document.getElementById('sourceSystemInfo');
+    const targetInfo = document.getElementById('targetSystemInfo');
+
+    const renderSystemInfo = (container, system, placeholder) => {
+        if (!container) return;
+        if (!system) {
+            container.innerHTML = `<p class="info-placeholder">${placeholder}</p>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="info-name">${system.name}</div>
+            <div class="info-tags">
+                <span class="tag">${system.code}</span>
+                <span class="tag">${system.type}</span>
+            </div>
+            <div class="info-meta">
+                <span><strong>Эллипсоид:</strong> ${system.ellipsoid}</span>
+                <span><strong>Регион:</strong> ${system.area}</span>
+                <span><strong>Датум:</strong> ${system.datum}</span>
+            </div>
+            <p class="info-desc">${system.description}</p>
+        `;
+    };
+
+    const attachSelectionHandlers = (input, container, placeholder) => {
+        if (!input || !container) return;
+        renderSystemInfo(container, null, placeholder);
+
+        input.addEventListener('systemSelected', (e) => {
+            input.selectedSystem = e.detail;
+            renderSystemInfo(container, e.detail, placeholder);
+        });
+
+        input.addEventListener('input', () => {
+            if (input._isSelecting) return; // Не очищаем при программной установке
+            input.selectedSystem = null;
+            renderSystemInfo(container, null, placeholder);
+        });
+    };
+
+    attachSelectionHandlers(
+        document.getElementById('sourceSystemInput'),
+        sourceInfo,
+        'Выберите исходную систему'
+    );
+
+    attachSelectionHandlers(
+        document.getElementById('targetSystemInput'),
+        targetInfo,
+        'Выберите целевую систему'
+    );
+    
     // Обработчик для кнопки замены
     const swapButton = document.getElementById('swapCoordinatesButton');
     swapButton.addEventListener('click', () => {
         // Меняем значения полей ввода
         const sourceValue = document.getElementById('sourceSystemInput').value;
         const targetValue = document.getElementById('targetSystemInput').value;
+        const sourceSystem = document.getElementById('sourceSystemInput').selectedSystem;
+        const targetSystem = document.getElementById('targetSystemInput').selectedSystem;
         
         document.getElementById('sourceSystemInput').value = targetValue;
         document.getElementById('targetSystemInput').value = sourceValue;
+
+        document.getElementById('sourceSystemInput').selectedSystem = targetSystem;
+        document.getElementById('targetSystemInput').selectedSystem = sourceSystem;
+
+        renderSystemInfo(sourceInfo, targetSystem, 'Выберите исходную систему');
+        renderSystemInfo(targetInfo, sourceSystem, 'Выберите целевую систему');
         
         // Анимация кнопки
         swapButton.classList.add('swap-animation');

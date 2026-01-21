@@ -8,6 +8,12 @@
 </head>
 <body>
     <div class="container">
+        <header class="page-header">
+            <p class="eyebrow">Демо автодополнения</p>
+            <h1>Быстрый выбор систем координат</h1>
+            <p class="subtitle">Начните вводить название или код системы, выберите из списка и при необходимости поменяйте поля местами.</p>
+        </header>
+
         <div class="coordinate-systems-container" id="coordinateSystemsContainer">
             <h3>Настройка систем координат</h3>
             <div class="coordinate-systems">
@@ -24,6 +30,9 @@
                                 <div class="autocomplete-dropdown" id="sourceDropdown">
                                     <!-- Предложения будут появляться здесь -->
                                 </div>
+                            </div>
+                            <div class="system-info" id="sourceSystemInfo">
+                                <!-- Информация о выбранной системе -->
                             </div>
                         </div>
                     </div>
@@ -48,10 +57,14 @@
                                     <!-- Предложения будут появляться здесь -->
                                 </div>
                             </div>
+                            <div class="system-info" id="targetSystemInfo">
+                                <!-- Информация о выбранной системе -->
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <p class="helper-text">Подсказка: используйте стрелки ↑/↓ и Enter для выбора из списка.</p>
         </div>
     </div>
     
