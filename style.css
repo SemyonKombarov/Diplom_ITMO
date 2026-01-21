@@ -185,7 +185,7 @@ h1 {
 .system-selection {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    /* align-items: flex-start; */
     gap: 30px;
     flex-wrap: wrap;
 }
@@ -1492,4 +1492,8 @@ td[title]:hover::after {
         font-size: 0.85rem;
         padding: 0 10px;
     }
+}
+
+.hint {
+    text-align: center;
 }
