@@ -1497,3 +1497,201 @@ td[title]:hover::after {
 .hint {
     text-align: center;
 }
+
+/* Добавьте эти стили в существующий style.css */
+
+/* Кнопка преобразования */
+.action-button.transform {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-button.transform:hover {
+    background: linear-gradient(135deg, #5a0db8 0%, #1c65e8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(106, 17, 203, 0.3);
+}
+
+/* Контейнер результатов */
+.results-container {
+    margin-top: 30px;
+    border: 2px solid #4CAF50;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8fff8;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.results-container .table-header {
+    background: #4CAF50;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.results-container .table-header h2 {
+    margin: 0;
+    font-size: 1.3em;
+}
+
+/* Статистика */
+.stats-container {
+    padding: 15px 20px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 4px;
+    border-left: 4px solid #4CAF50;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.stat-value {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.stat-value.success {
+    color: #4CAF50;
+}
+
+.stat-value.error {
+    color: #f44336;
+}
+
+/* Таблица результатов */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+}
+
+.results-table th {
+    background: #e8f5e9;
+    position: sticky;
+    top: 0;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #4CAF50;
+}
+
+.results-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.results-table tbody tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.results-table tbody tr:hover {
+    background: #f0f7f0;
+}
+
+.error-row {
+    background: #ffebee !important;
+}
+
+.error-row:hover {
+    background: #ffcdd2 !important;
+}
+
+/* Бейджи статусов */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.status-badge.success {
+    background: #4CAF50;
+    color: white;
+}
+
+.status-badge.error {
+    background: #f44336;
+    color: white;
+}
+
+.error-message {
+    font-size: 12px;
+    color: #f44336;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Кнопка закрытия результатов */
+.action-button.close {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.action-button.close:hover {
+    background: #d32f2f;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .results-container .table-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .results-container .table-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+}

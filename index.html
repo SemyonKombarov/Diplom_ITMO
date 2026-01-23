@@ -136,7 +136,11 @@
                             title="Поменять местами значения X и Y" data-swap-type="table">
                         Поменять X↔Y
                     </button>
-                    <button class="action-button save" id="saveTableButton">💾 Сохранить CSV</button>
+                    <!-- Кнопка преобразования координат -->
+                    <button class="action-button transform" id="transformButton" 
+                            title="Преобразовать координаты из исходной системы в целевую">
+                        🔄 Преобразовать координаты
+                    </button>
                 </div>
             </div>
             
@@ -144,11 +148,16 @@
                 <!-- Таблица будет вставлена сюда -->
             </div>
         </div>
+            
+            <div id="tableWrapper">
+                <!-- Таблица будет вставлена сюда -->
+            </div>
+        </div>
         
-        <header></header>
+        <!-- <header></header>
         <p class="hint">
             Перевод координат &copy; 2026
-        </p>
+        </p> -->
     </div>
     
     <!-- Модальное окно для назначения столбцов -->
@@ -209,6 +218,8 @@
         <!-- <p>Перевод координат &copy; 2026</p> -->
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
+    <script src="coordinateConverter.js"></script>
     <script src="autocomplete.js"></script>
     <script src="app.js"></script>
 </body>

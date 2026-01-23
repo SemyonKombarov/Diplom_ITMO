@@ -30,8 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Элементы управления таблицей
     const addRowButton = document.getElementById('addRowButton');
     const deleteRowButton = document.getElementById('deleteRowButton');
-    const saveTableButton = document.getElementById('saveTableButton');
     const swapTableButton = document.getElementById('swapTableButton');
+    const swapCoordinatesButton = document.getElementById('swapCoordinatesButton');
+    const transformButton = document.getElementById('transformButton');
     
     // Глобальные переменные
     let selectedFile = null;
@@ -40,14 +41,28 @@ document.addEventListener('DOMContentLoaded', function() {
     let tableData = [];
     let originalTableData = []; // Сохраняем оригинальные данные для сброса
     let isManualCreation = false;
+    let coordinateConverter = null;
+    let resultsTableContainer = null;
+    
+    // Проверяем наличие proj4
+    if (typeof proj4 === 'undefined') {
+        console.error('Proj4 не загружен! Добавьте <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script> в HTML');
+        showError('Библиотека Proj4 не загружена. Функция преобразования координат недоступна.');
+    } else {
+        coordinateConverter = new CoordinateConverter();
+    }
     
     // Инициализация - скрываем модальное окно, таблицу и контейнер систем координат
     modalOverlay.style.display = 'none';
     tableContainer.style.display = 'none';
     coordinateSystemsContainer.style.display = 'none';
+    transformButton.style.display = 'none'; // Скрываем кнопку преобразования по умолчанию
     
     // Скрываем сообщение об ошибке при загрузке
     hideError();
+    
+    // Инициализируем контейнер для результатов
+    initializeResultsContainer();
     
     // При клике на кастомную кнопку активируем скрытый input
     customButton.addEventListener('click', function() {
@@ -91,6 +106,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Скрываем контейнер систем координат
             coordinateSystemsContainer.style.display = 'none';
             
+            // Скрываем кнопку преобразования
+            transformButton.style.display = 'none';
+            
+            // Скрываем контейнер результатов
+            if (resultsTableContainer) {
+                resultsTableContainer.style.display = 'none';
+            }
+            
             // Активируем кнопку предпросмотра
             previewButton.disabled = false;
             
@@ -120,6 +143,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Показываем контейнер систем координат
         coordinateSystemsContainer.style.display = 'block';
         
+        // Показываем кнопку преобразования
+        transformButton.style.display = 'inline-flex';
+        
+        // Скрываем контейнер результатов
+        if (resultsTableContainer) {
+            resultsTableContainer.style.display = 'none';
+        }
+        
         // Сбрасываем поля систем координат
         resetCoordinateSystems();
     });
@@ -133,14 +164,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Показываем индикатор загрузки
-            loadingIndicator.style.display = 'block';
+            showLoadingIndicator(true, 'Загрузка файла...');
             previewButton.disabled = true;
             
             // Загружаем и парсим файл
             await loadAndParseFile(selectedFile);
             
             // Скрываем индикатор загрузки
-            loadingIndicator.style.display = 'none';
+            showLoadingIndicator(false);
             previewButton.disabled = false;
             
             // Показываем модальное окно
@@ -148,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
         } catch (error) {
             // Скрываем индикатор загрузки в случае ошибки
-            loadingIndicator.style.display = 'none';
+            showLoadingIndicator(false);
             previewButton.disabled = false;
             
             console.error('Ошибка при обработке файла:', error);
@@ -201,15 +232,20 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteSelectedRows();
     });
     
-    // Сохранить таблицу как CSV
-    saveTableButton.addEventListener('click', function() {
-        saveTableDataAsCSV();
-    });
-    
     // Кнопка замены координат в таблице
     swapTableButton.addEventListener('click', function() {
         swapCoordinatesInTable();
     });
+    
+    // Кнопка замены систем координат
+    if (swapCoordinatesButton) {
+        swapCoordinatesButton.addEventListener('click', function() {
+            swapCoordinateSystems();
+        });
+    }
+    
+    // Кнопка преобразования координат
+    transformButton.addEventListener('click', transformCoordinates);
     
     // Функция для создания пустой таблицы
     function createEmptyTable() {
@@ -253,6 +289,39 @@ document.addEventListener('DOMContentLoaded', function() {
         // Убираем класс анимации после завершения
         setTimeout(() => {
             swapTableButton.classList.remove('swap-animation');
+        }, 500);
+    }
+    
+    // Функция для замены систем координат местами
+    function swapCoordinateSystems() {
+        const sourceSystemInput = document.getElementById('sourceSystemInput');
+        const targetSystemInput = document.getElementById('targetSystemInput');
+        const sourceSystemInfo = document.getElementById('sourceSystemInfo');
+        const targetSystemInfo = document.getElementById('targetSystemInfo');
+        
+        // Меняем значения местами
+        const tempValue = sourceSystemInput.value;
+        sourceSystemInput.value = targetSystemInput.value;
+        targetSystemInput.value = tempValue;
+        
+        // Меняем выбранные системы
+        const tempSystem = sourceSystemInput.selectedSystem;
+        sourceSystemInput.selectedSystem = targetSystemInput.selectedSystem;
+        targetSystemInput.selectedSystem = tempSystem;
+        
+        // Меняем информацию о системах
+        const tempInfo = sourceSystemInfo.innerHTML;
+        sourceSystemInfo.innerHTML = targetSystemInfo.innerHTML;
+        targetSystemInfo.innerHTML = tempInfo;
+        
+        // Показываем/скрываем информацию в зависимости от содержимого
+        sourceSystemInfo.style.display = sourceSystemInfo.innerHTML.includes('info-placeholder') ? 'none' : 'block';
+        targetSystemInfo.style.display = targetSystemInfo.innerHTML.includes('info-placeholder') ? 'none' : 'block';
+        
+        // Добавляем анимацию к кнопке swapCoordinatesButton
+        swapCoordinatesButton.classList.add('swap-animation');
+        setTimeout(() => {
+            swapCoordinatesButton.classList.remove('swap-animation');
         }, 500);
     }
     
@@ -557,6 +626,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Показываем контейнер систем координат
             coordinateSystemsContainer.style.display = 'block';
             
+            // Показываем кнопку преобразования
+            transformButton.style.display = 'inline-flex';
+            
+            // Скрываем контейнер результатов
+            if (resultsTableContainer) {
+                resultsTableContainer.style.display = 'none';
+            }
+            
             // Сбрасываем поля систем координат
             resetCoordinateSystems();
             
@@ -596,10 +673,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <input type="text" class="editable-cell" value="${escapeHtml(row.point)}" data-field="point">
                     </td>
                     <td>
-                        <input type="text" class="editable-cell" value="${escapeHtml(row.x)}" data-field="x">
+                        <input type="text" class="editable-cell coordinate-x" value="${escapeHtml(row.x)}" data-field="x">
                     </td>
                     <td>
-                        <input type="text" class="editable-cell" value="${escapeHtml(row.y)}" data-field="y">
+                        <input type="text" class="editable-cell coordinate-y" value="${escapeHtml(row.y)}" data-field="y">
                     </td>
                 </tr>
             `;
@@ -735,44 +812,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tableData.length === 0) {
             tableContainer.style.display = 'none';
             coordinateSystemsContainer.style.display = 'none';
+            transformButton.style.display = 'none';
             alert(`Удалено ${deletedCount} строк. Таблица пуста.`);
         } else {
             renderTable();
             alert(`Удалено ${deletedCount} строк. Осталось ${afterCount} строк.`);
         }
-    }
-    
-    // Функция для сохранения данных таблицы как CSV
-    function saveTableDataAsCSV() {
-        if (tableData.length === 0) {
-            alert('Таблица пуста. Нет данных для сохранения.');
-            return;
-        }
-        
-        // Формируем CSV содержимое
-        let csvContent = "ID,Точка,X,Y\n";
-        
-        tableData.forEach(row => {
-            // Экранируем кавычки в значениях
-            const escapedPoint = row.point.replace(/"/g, '""');
-            csvContent += `${row.id},"${escapedPoint}",${row.x},${row.y}\n`;
-        });
-        
-        // Создаем Blob и ссылку для скачивания
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', `координаты_${new Date().toISOString().slice(0,10)}.csv`);
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Показываем сообщение об успешном сохранении
-        alert(`Таблица сохранена в CSV файл. Сохранено ${tableData.length} строк.`);
     }
     
     // Функция для отображения информации о файле
@@ -849,4 +894,823 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = text;
         return div.innerHTML;
     }
+    
+    // ============================================
+    // ФУНКЦИИ ДЛЯ ПРЕОБРАЗОВАНИЯ КООРДИНАТ
+    // ============================================
+    
+    /**
+     * Инициализировать контейнер для результатов
+     */
+    function initializeResultsContainer() {
+        // Создаем контейнер для результатов
+        resultsTableContainer = document.createElement('div');
+        resultsTableContainer.className = 'table-container results-container';
+        resultsTableContainer.id = 'resultsTableContainer';
+        resultsTableContainer.style.display = 'none'; // Скрываем по умолчанию
+        
+        // Создаем заголовок
+        const header = document.createElement('div');
+        header.className = 'table-header';
+        header.innerHTML = `
+            <h2>Результаты преобразования координат</h2>
+            <div class="table-actions">
+                <button class="action-button save" id="saveResultsButton">💾 Сохранить результаты CSV</button>
+                <button class="action-button close" id="closeResultsButton">× Скрыть результаты</button>
+            </div>
+        `;
+        
+        // Создаем контейнер для таблицы
+        const tableWrapper = document.createElement('div');
+        tableWrapper.id = 'resultsTableWrapper';
+        
+        // Создаем контейнер для статистики
+        const statsContainer = document.createElement('div');
+        statsContainer.className = 'stats-container';
+        statsContainer.id = 'statsContainer';
+        
+        resultsTableContainer.appendChild(header);
+        resultsTableContainer.appendChild(statsContainer);
+        resultsTableContainer.appendChild(tableWrapper);
+        
+        // Вставляем после основной таблицы
+        const mainTableContainer = document.getElementById('tableContainer');
+        if (mainTableContainer && mainTableContainer.parentNode) {
+            mainTableContainer.parentNode.insertBefore(resultsTableContainer, mainTableContainer.nextSibling);
+        }
+        
+        // Добавляем обработчики для кнопок в результатах
+        setTimeout(() => {
+            const saveResultsBtn = document.getElementById('saveResultsButton');
+            const closeResultsBtn = document.getElementById('closeResultsButton');
+            
+            if (saveResultsBtn) {
+                saveResultsBtn.onclick = saveResultsToCSV;
+            }
+            
+            if (closeResultsBtn) {
+                closeResultsBtn.onclick = function() {
+                    resultsTableContainer.style.display = 'none';
+                };
+            }
+        }, 100);
+    }
+    
+    /**
+     * Получить данные из основной таблицы (исправленная версия)
+     */
+    function getTableData() {
+        const table = document.querySelector('#tableWrapper table');
+        if (!table) {
+            throw new Error('Таблица не найдена');
+        }
+        
+        const rows = table.querySelectorAll('tbody tr');
+        const data = [];
+        
+        rows.forEach((row, index) => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 5) { // 5 ячеек: чекбокс, №, точка, x, y
+                // Получаем название точки (ячейка 2, т.к. первая - чекбокс, вторая - №)
+                const nameCell = cells[2];
+                let name = '';
+                if (nameCell.querySelector('input')) {
+                    name = nameCell.querySelector('input').value.trim();
+                } else {
+                    name = nameCell.textContent.trim();
+                }
+                
+                // Получаем координату X (ячейка 3)
+                const xCell = cells[3];
+                let x = '';
+                if (xCell.querySelector('input')) {
+                    x = xCell.querySelector('input').value.trim();
+                } else {
+                    x = xCell.textContent.trim();
+                }
+                
+                // Получаем координату Y (ячейка 4)
+                const yCell = cells[4];
+                let y = '';
+                if (yCell.querySelector('input')) {
+                    y = yCell.querySelector('input').value.trim();
+                } else {
+                    y = yCell.textContent.trim();
+                }
+                
+                // Добавляем только если есть название или координаты
+                if (name || x || y) {
+                    data.push({
+                        id: index + 1,
+                        name: name || `Точка ${index + 1}`,
+                        x: x,
+                        y: y
+                    });
+                }
+            }
+        });
+        
+        console.log('Получены данные таблицы:', data.length, 'точек');
+        return data;
+    }
+    
+    /**
+     * Преобразовать координаты
+     */
+    async function transformCoordinates() {
+        try {
+            if (!coordinateConverter) {
+                showNotification('Конвертер координат не инициализирован', 'error');
+                return;
+            }
+            
+            const sourceSystem = document.getElementById('sourceSystemInput').value;
+            const targetSystem = document.getElementById('targetSystemInput').value;
+            
+            // Проверка ввода
+            if (!sourceSystem || !targetSystem) {
+                showNotification('Пожалуйста, выберите исходную и целевую системы координат', 'error');
+                return;
+            }
+            
+            if (!coordinateConverter.isSystemSupported(sourceSystem)) {
+                showNotification(`Исходная система координат "${sourceSystem}" не поддерживается`, 'error');
+                return;
+            }
+            
+            if (!coordinateConverter.isSystemSupported(targetSystem)) {
+                showNotification(`Целевая система координат "${targetSystem}" не поддерживается`, 'error');
+                return;
+            }
+            
+            // Отключаем кнопку на время преобразования
+            transformButton.disabled = true;
+            transformButton.innerHTML = '<span class="button-icon">⏳</span> Преобразование...';
+            
+            // Показываем индикатор загрузки
+            showLoadingIndicator(true, 'Преобразование координат...');
+            
+            // Получаем данные из таблицы
+            const tableData = getTableData();
+            
+            if (tableData.length === 0) {
+                showNotification('Таблица пуста. Добавьте данные для преобразования.', 'warning');
+                showLoadingIndicator(false);
+                transformButton.disabled = false;
+                transformButton.innerHTML = '<span class="button-icon">🔄</span> Преобразовать координаты';
+                return;
+            }
+            
+            // Валидируем данные перед преобразованием
+            const validatedData = [];
+            const validationErrors = [];
+            
+            tableData.forEach((point, index) => {
+                const validation = validateCoordinates(point.x, point.y);
+                if (validation.isValid) {
+                    validatedData.push({
+                        ...point,
+                        x: validation.x,
+                        y: validation.y
+                    });
+                } else {
+                    validationErrors.push({
+                        point: point.name || `Точка ${index + 1}`,
+                        error: validation.error
+                    });
+                }
+            });
+            
+            // Показываем предупреждение о невалидных данных
+            if (validationErrors.length > 0) {
+                console.warn('Найдены некорректные точки:', validationErrors);
+            }
+            
+            if (validatedData.length === 0) {
+                showNotification('Нет валидных координат для преобразования. Проверьте данные в таблице.', 'error');
+                showLoadingIndicator(false);
+                transformButton.disabled = false;
+                transformButton.innerHTML = '<span class="button-icon">🔄</span> Преобразовать координаты';
+                return;
+            }
+            
+            // Преобразуем координаты
+            const transformedData = coordinateConverter.transformBatch(
+                validatedData,
+                sourceSystem,
+                targetSystem
+            );
+            
+            // Получаем статистику
+            const stats = coordinateConverter.getTransformationStats(transformedData);
+            
+            // Добавляем информацию о валидационных ошибках
+            if (validationErrors.length > 0) {
+                stats.validationErrors = validationErrors.length;
+                stats.totalWithErrors = tableData.length;
+            }
+            
+            // Отображаем результаты
+            displayTransformationResults(transformedData, stats, sourceSystem, targetSystem, validationErrors);
+            
+            // Показываем уведомление
+            let notificationMessage = `Преобразовано ${stats.success} из ${stats.total} точек (${stats.successRate}% успешно)`;
+            
+            if (validationErrors.length > 0) {
+                notificationMessage += `. Пропущено ${validationErrors.length} некорректных точек`;
+            }
+            
+            showNotification(
+                notificationMessage,
+                stats.success === stats.total && validationErrors.length === 0 ? 'success' : 'warning'
+            );
+            
+        } catch (error) {
+            console.error('Ошибка преобразования координат:', error);
+            showNotification(`Ошибка преобразования: ${error.message}`, 'error');
+        } finally {
+            // Включаем кнопку обратно
+            transformButton.disabled = false;
+            transformButton.innerHTML = '<span class="button-icon">🔄</span> Преобразовать координаты';
+            showLoadingIndicator(false);
+        }
+    }
+    
+    /**
+     * Проверить валидность координат
+     */
+    function validateCoordinates(x, y) {
+        // Проверяем, что значения не пустые
+        if (!x || !y || x.trim() === '' || y.trim() === '') {
+            return { isValid: false, error: 'Координаты не могут быть пустыми' };
+        }
+        
+        // Проверяем, что это числа
+        const xNum = parseFloat(x);
+        const yNum = parseFloat(y);
+        
+        if (isNaN(xNum) || isNaN(yNum)) {
+            return { isValid: false, error: 'Координаты должны быть числами' };
+        }
+        
+        return { 
+            isValid: true, 
+            x: xNum, 
+            y: yNum 
+        };
+    }
+    
+    /**
+     * Отобразить результаты преобразования
+     */
+    function displayTransformationResults(data, stats, sourceSystem, targetSystem, validationErrors = []) {
+        // Обновляем статистику
+        const statsContainer = document.getElementById('statsContainer');
+        
+        let statsHTML = `
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Всего точек:</span>
+                    <span class="stat-value">${stats.totalWithErrors || stats.total}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Успешно:</span>
+                    <span class="stat-value success">${stats.success}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Ошибок преобразования:</span>
+                    <span class="stat-value ${stats.errors > 0 ? 'error' : ''}">${stats.errors}</span>
+                </div>
+        `;
+        
+        if (stats.validationErrors) {
+            statsHTML += `
+                <div class="stat-item">
+                    <span class="stat-label">Некорректные данные:</span>
+                    <span class="stat-value error">${stats.validationErrors}</span>
+                </div>
+            `;
+        }
+        
+        statsHTML += `
+                <div class="stat-item">
+                    <span class="stat-label">Успешность:</span>
+                    <span class="stat-value">${stats.successRate}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Исходная система:</span>
+                    <span class="stat-value">${sourceSystem}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Целевая система:</span>
+                    <span class="stat-value">${targetSystem}</span>
+                </div>
+            </div>
+        `;
+        
+        // Добавляем информацию о валидационных ошибках
+        if (validationErrors.length > 0) {
+            statsHTML += `
+                <div class="validation-errors">
+                    <strong>⚠️ Некорректные точки (пропущены):</strong>
+                    <div class="validation-list">
+                        ${validationErrors.slice(0, 5).map(err => 
+                            `<div>• ${err.point}: ${err.error}</div>`
+                        ).join('')}
+                        ${validationErrors.length > 5 ? `<div>... и еще ${validationErrors.length - 5} точек</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        statsContainer.innerHTML = statsHTML;
+        
+        // Создаем таблицу с результатами
+        const tableWrapper = document.getElementById('resultsTableWrapper');
+        tableWrapper.innerHTML = '';
+        
+        const table = document.createElement('table');
+        table.className = 'data-table results-table';
+        
+        // Заголовок таблицы
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>X (${sourceSystem})</th>
+                <th>Y (${sourceSystem})</th>
+                <th>X (${targetSystem})</th>
+                <th>Y (${targetSystem})</th>
+                <th>Статус</th>
+                <th>Ошибка</th>
+            </tr>
+        `;
+        
+        // Тело таблицы
+        const tbody = document.createElement('tbody');
+        
+        data.forEach(point => {
+            const row = document.createElement('tr');
+            row.className = point.status === 'error' ? 'error-row' : '';
+            
+            row.innerHTML = `
+                <td>${point.id}</td>
+                <td>${point.name}</td>
+                <td>${formatCoordinate(point.x_original)}</td>
+                <td>${formatCoordinate(point.y_original)}</td>
+                <td>${point.status === 'success' ? formatCoordinate(point.x_transformed, 6) : '-'}</td>
+                <td>${point.status === 'success' ? formatCoordinate(point.y_transformed, 6) : '-'}</td>
+                <td>
+                    <span class="status-badge ${point.status}" title="${point.status === 'success' ? 'Успешно' : 'Ошибка'}">
+                        ${point.status === 'success' ? '✓' : '✗'}
+                    </span>
+                </td>
+                <td class="error-message" title="${point.error || ''}">${point.error ? (point.error.length > 30 ? point.error.substring(0, 30) + '...' : point.error) : '-'}</td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        tableWrapper.appendChild(table);
+        
+        // Показываем контейнер с результатами
+        resultsTableContainer.style.display = 'block';
+        
+        // Прокручиваем к результатам
+        resultsTableContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    /**
+     * Форматировать координату для отображения
+     */
+    function formatCoordinate(value, decimals = 4) {
+        if (value === null || value === undefined || value === '' || isNaN(parseFloat(value))) return '-';
+        const num = parseFloat(value);
+        return num.toFixed(decimals);
+    }
+    
+    /**
+     * Сохранить результаты в CSV
+     */
+    function saveResultsToCSV() {
+        const table = document.querySelector('.results-table');
+        if (!table) {
+            showNotification('Нет данных для сохранения', 'error');
+            return;
+        }
+        
+        const rows = table.querySelectorAll('tr');
+        const csvContent = [];
+        
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('th, td');
+            const rowData = [];
+            
+            cols.forEach(col => {
+                // Исключаем элементы с классами status-badge
+                if (!col.querySelector('.status-badge') && !col.classList.contains('status-badge')) {
+                    rowData.push(`"${col.textContent.replace(/"/g, '""')}"`);
+                }
+            });
+            
+            csvContent.push(rowData.join(','));
+        });
+        
+        const csvString = csvContent.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        const sourceSystem = document.getElementById('sourceSystemInput').value;
+        const targetSystem = document.getElementById('targetSystemInput').value;
+        const fileName = `coordinates_transformed_${sourceSystem}_to_${targetSystem}_${new Date().toISOString().slice(0,10)}.csv`;
+        
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification(`Результаты сохранены в файл: ${fileName}`, 'success');
+    }
+    
+    /**
+     * Показать индикатор загрузки
+     */
+    function showLoadingIndicator(show, message = 'Загрузка...') {
+        if (loadingIndicator) {
+            if (show) {
+                loadingIndicator.querySelector('p').textContent = message;
+                loadingIndicator.style.display = 'flex';
+            } else {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+    }
+    
+    /**
+     * Показать уведомление
+     */
+    function showNotification(message, type = 'info') {
+        // Удаляем предыдущее уведомление
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+        
+        // Создаем новое уведомление
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <span>${message}</span>
+            <button class="close-notification">&times;</button>
+        `;
+        
+        // Добавляем стили
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3'};
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        // Добавляем обработчик закрытия
+        const closeBtn = notification.querySelector('.close-notification');
+        closeBtn.style.cssText = `
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        `;
+        closeBtn.onclick = () => notification.remove();
+        
+        document.body.appendChild(notification);
+        
+        // Автоматически закрываем через 5 секунд
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+    
+    // Добавляем анимации и стили в CSS
+        // Добавляем анимации и стили в CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        /* Стили для контейнера действий таблицы - ВЫРАВНИВАНИЕ ВПРАВО */
+        .table-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end; /* Выравнивание по правому краю */
+            margin-left: auto; /* Автоматический отступ слева для выравнивания вправо */
+            width: auto; /* Автоматическая ширина */
+        }
+        
+        .action-button.transform {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .action-button.transform:hover {
+            background: linear-gradient(135deg, #5a0db8 0%, #1c65e8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 17, 203, 0.3);
+        }
+        
+        .action-button.transform:active {
+            transform: translateY(0);
+        }
+        
+        .action-button.transform:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .action-button.transform .button-icon {
+            font-size: 16px;
+        }
+        
+        /* Стили для других кнопок в контейнере */
+        .action-button.add,
+        .action-button.delete,
+        .action-button.swap {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .action-button.add:hover {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+            color: #2e7d32;
+        }
+        
+        .action-button.delete:hover {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        
+        .action-button.swap:hover {
+            background: #e3f2fd;
+            border-color: #2196F3;
+            color: #1565c0;
+        }
+        
+        /* Стили для заголовка таблицы */
+        .table-header {
+            display: flex;
+            justify-content: space-between; /* Разделяем заголовок и кнопки */
+            align-items: center;
+            padding: 15px 20px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .table-header h2 {
+            margin: 0;
+            font-size: 1.4em;
+            color: #333;
+        }
+        
+        .results-container {
+            margin-top: 30px;
+            border: 2px solid #4CAF50;
+            background: #f8fff8;
+        }
+        
+        .results-container .table-header {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .stats-container {
+            padding: 15px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .stat-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+        }
+        
+        .stat-value.success {
+            color: #4CAF50;
+        }
+        
+        .stat-value.error {
+            color: #f44336;
+        }
+        
+        .results-table {
+            margin-top: 0;
+        }
+        
+        .results-table th {
+            background: #e8f5e9;
+            position: sticky;
+            top: 0;
+        }
+        
+        .error-row {
+            background: #ffebee !important;
+        }
+        
+        .error-row:hover {
+            background: #ffcdd2 !important;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+        }
+        
+        .status-badge.success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-badge.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .error-message {
+            font-size: 12px;
+            color: #f44336;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .action-button.close {
+            background: #f44336;
+        }
+        
+        .action-button.close:hover {
+            background: #d32f2f;
+        }
+        
+        .validation-errors {
+            margin-top: 15px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 4px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .validation-errors strong {
+            color: #856404;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .validation-list {
+            font-size: 12px;
+            color: #856404;
+            margin-left: 10px;
+        }
+        
+        .swap-animation {
+            animation: swapEffect 0.5s ease;
+        }
+        
+        @keyframes swapEffect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Для мобильных устройств - адаптивность */
+        @media (max-width: 768px) {
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            
+            .table-header h2 {
+                text-align: center;
+            }
+            
+            .table-actions {
+                justify-content: center; /* Центрируем на мобильных */
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .action-button {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 5px;
+            }
+        }
+        
+        /* Для очень маленьких экранов */
+        @media (max-width: 480px) {
+            .table-actions {
+                flex-direction: column;
+            }
+            
+            .action-button {
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 });
