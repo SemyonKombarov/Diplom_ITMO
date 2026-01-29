@@ -292,38 +292,91 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     }
     
-    // Функция для замены систем координат местами
-    function swapCoordinateSystems() {
-        const sourceSystemInput = document.getElementById('sourceSystemInput');
-        const targetSystemInput = document.getElementById('targetSystemInput');
-        const sourceSystemInfo = document.getElementById('sourceSystemInfo');
-        const targetSystemInfo = document.getElementById('targetSystemInfo');
-        
-        // Меняем значения местами
-        const tempValue = sourceSystemInput.value;
-        sourceSystemInput.value = targetSystemInput.value;
-        targetSystemInput.value = tempValue;
-        
-        // Меняем выбранные системы
-        const tempSystem = sourceSystemInput.selectedSystem;
-        sourceSystemInput.selectedSystem = targetSystemInput.selectedSystem;
-        targetSystemInput.selectedSystem = tempSystem;
-        
-        // Меняем информацию о системах
-        const tempInfo = sourceSystemInfo.innerHTML;
-        sourceSystemInfo.innerHTML = targetSystemInfo.innerHTML;
-        targetSystemInfo.innerHTML = tempInfo;
-        
-        // Показываем/скрываем информацию в зависимости от содержимого
-        sourceSystemInfo.style.display = sourceSystemInfo.innerHTML.includes('info-placeholder') ? 'none' : 'block';
-        targetSystemInfo.style.display = targetSystemInfo.innerHTML.includes('info-placeholder') ? 'none' : 'block';
-        
-        // Добавляем анимацию к кнопке swapCoordinatesButton
+    // УПРОЩЕННАЯ И ТОЧНАЯ ФУНКЦИЯ ЗАМЕНЫ
+function swapCoordinateSystemsSimple() {
+    console.log('🔁 Замена систем координат...');
+    
+    // ТОЧНО находим элементы по ID
+    const sourceInput = document.getElementById('sourceSystemInput');
+    const targetInput = document.getElementById('targetSystemInput');
+    
+    // Проверяем, что элементы найдены и это действительно input элементы
+    if (!sourceInput || !targetInput) {
+        console.error('❌ Элементы не найдены! Проверьте ID элементов в HTML.');
+        alert('Ошибка: поля систем координат не найдены!');
+        return;
+    }
+    
+    if (sourceInput.tagName !== 'INPUT' || targetInput.tagName !== 'INPUT') {
+        console.error('❌ Элементы не являются input полями!');
+        console.log('sourceInput.tagName:', sourceInput.tagName);
+        console.log('targetInput.tagName:', targetInput.tagName);
+        return;
+    }
+    
+    // Показываем значения ДО замены
+    console.log('📊 ДО замены:');
+    console.log('  sourceSystemInput.value:', sourceInput.value);
+    console.log('  targetSystemInput.value:', targetInput.value);
+    
+    // ПРОСТО МЕНЯЕМ ЗНАЧЕНИЯ МЕСТАМИ
+    const temp = sourceInput.value;
+    sourceInput.value = targetInput.value;
+    targetInput.value = temp;
+    
+    // Показываем значения ПОСЛЕ замены
+    console.log('📊 ПОСЛЕ замены:');
+    console.log('  sourceSystemInput.value:', sourceInput.value);
+    console.log('  targetSystemInput.value:', targetInput.value);
+    
+    // Обновляем информационные блоки если они есть
+    updateInfoBlocks(sourceInput.value, targetInput.value);
+    
+    // Анимация
+    if (swapCoordinatesButton) {
         swapCoordinatesButton.classList.add('swap-animation');
         setTimeout(() => {
             swapCoordinatesButton.classList.remove('swap-animation');
         }, 500);
     }
+    
+    console.log('✅ Замена выполнена успешно!');
+}
+
+// Обновляем информационные блоки
+function updateInfoBlocks(sourceValue, targetValue) {
+    const sourceInfo = document.getElementById('sourceSystemInfo');
+    const targetInfo = document.getElementById('targetSystemInfo');
+    
+    if (sourceInfo) {
+        if (sourceValue) {
+            sourceInfo.innerHTML = `<p>Выбрана система: <strong>${sourceValue}</strong></p>`;
+            sourceInfo.style.display = 'block';
+        } else {
+            sourceInfo.innerHTML = '<p class="info-placeholder">Выберите исходную систему</p>';
+            sourceInfo.style.display = 'none';
+        }
+    }
+    
+    if (targetInfo) {
+        if (targetValue) {
+            targetInfo.innerHTML = `<p>Выбрана система: <strong>${targetValue}</strong></p>`;
+            targetInfo.style.display = 'block';
+        } else {
+            targetInfo.innerHTML = '<p class="info-placeholder">Выберите целевую систему</p>';
+            targetInfo.style.display = 'none';
+        }
+    }
+}
+
+// Заменяем обработчик на упрощенную версию
+if (swapCoordinatesButton) {
+    // Удаляем старый обработчик если есть
+    swapCoordinatesButton.removeEventListener('click', swapCoordinateSystems);
+    // Добавляем новый
+    swapCoordinatesButton.addEventListener('click', swapCoordinateSystemsSimple);
+    console.log('🔄 Обработчик замены систем координат обновлен');
+}
     
     // Функция для сброса полей систем координат
     function resetCoordinateSystems() {
