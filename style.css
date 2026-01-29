@@ -211,7 +211,7 @@ h1 {
     padding: 12px;
     background-color: #f1f3f5;
     border-radius: 8px;
-    border-left: 3px solid #3498db;
+    border-left: 3px solid #9b59b6;
     color: #2c3e50;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     display: none; /* Скрываем по умолчанию */
@@ -385,7 +385,7 @@ h1 {
 
 /* Стили для кнопки замены систем координат */
 .action-button.swap-system {
-    background: linear-gradient(to right, #3498db, #2980b9);
+    background: linear-gradient(to right, #9b59b6, #8e44ad);
     color: white;
     box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3);
     padding: 12px 24px;
@@ -402,7 +402,7 @@ h1 {
 .action-button.swap-system:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 12px rgba(52, 152, 219, 0.4);
-    background: linear-gradient(to right, #2980b9, #2573a7);
+    background: linear-gradient(to right, #8e44ad, #7d3c98);
 }
 
 .action-button.swap-system:active {
@@ -441,8 +441,9 @@ h1 {
 
 .file-input-section h3 {
     color: #2c3e50;
-    margin-bottom: 15px;
-    font-size: 1.2rem;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    text-align: center;
 }
 
 .selection-options {
@@ -548,7 +549,7 @@ h1 {
     padding: 20px;
     background-color: #f8f9fa;
     border-radius: 10px;
-    border-left: 4px solid #3498db;
+    border-left: 4px solid #2ecc71;
     display: none;
 }
 
@@ -686,7 +687,7 @@ h1 {
 }
 
 .table-header h2 {
-    color: #2c3e50;
+    color: #ffffff;
     font-size: 1.5rem;
 }
 
@@ -1600,7 +1601,7 @@ td[title]:hover::after {
 }
 
 .results-table th {
-    background: #e8f5e9;
+    background: #4CAF50;
     position: sticky;
     top: 0;
     padding: 12px 15px;
