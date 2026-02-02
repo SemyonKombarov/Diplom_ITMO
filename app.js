@@ -966,7 +966,7 @@ if (swapCoordinatesButton) {
         const header = document.createElement('div');
         header.className = 'table-header';
         header.innerHTML = `
-            <h2>Результаты преобразования координат</h2>
+            <h2 class='results-h2'>Результаты преобразования координат</h2>
             <div class="table-actions">
                 <button class="action-button save" id="saveResultsButton">💾 Сохранить результаты CSV</button>
                 <button class="action-button close" id="closeResultsButton">× Скрыть результаты</button>

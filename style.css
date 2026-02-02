@@ -687,8 +687,8 @@ h1 {
 }
 
 .table-header h2 {
-    color: #ffffff;
-    font-size: 1.5rem;
+    color: #2c3e50;
+    font-size: 1.4rem;
 }
 
 .table-actions {
@@ -1527,11 +1527,18 @@ td[title]:hover::after {
 .results-container {
     margin-top: 30px;
     border: 2px solid #4CAF50;
-    border-radius: 8px;
+    /* border-radius: 8px; */
     overflow: hidden;
     background: #f8fff8;
     animation: fadeIn 0.5s ease;
 }
+
+.results-h2 {
+    margin: 0;
+    font-size: 1.4em;
+    color: white !important;
+}
+
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -1545,6 +1552,7 @@ td[title]:hover::after {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin: 0;
 }
 
 .results-container .table-header h2 {
